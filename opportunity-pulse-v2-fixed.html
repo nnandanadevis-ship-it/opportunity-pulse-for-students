@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opportunity Pulse — AI Student Discovery Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+/* ══ RESET ══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root {
+  --bg:       #080a0f;
+  --surface:  #0f1219;
+  --card:     #161b27;
+  --card2:    #1c2130;
+  --border:   #252d42;
+  --border2:  #2e3850;
+  --pill:     #1e2840;
+  --accent:   #6366f1;
+  --accent2:  #06d6a0;
+  --accent3:  #f59e0b;
+  --coral:    #ef4444;
+  --purple:   #a855f7;
+  --sky:      #38bdf8;
+  --text:     #f1f5f9;
+  --muted:    #64748b;
+  --muted2:   #94a3b8;
+  --font-head:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --r-sm:8px; --r-md:12px; --r-lg:18px; --r-xl:24px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --glow:0 0 40px rgba(99,102,241,.12);
+}
+
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ══════════════════════════════════════
+   ERROR SYSTEM
+══════════════════════════════════════ */
+/* Global Error Boundary */
+.error-boundary{
+  position:fixed;inset:0;background:rgba(8,10,15,.96);
+  z-index:9999;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:20px;backdrop-filter:blur(8px);
+  padding:20px;text-align:center;
+}
+.error-boundary.show{display:flex;align-items:center;justify-content:center;flex-direction:column}
+.eb-icon{font-size:52px;animation:pulse 2s ease-in-out infinite}
+.eb-code{font-family:monospace;font-size:11px;color:var(--muted);background:var(--card);
+  padding:4px 12px;border-radius:20px;border:1px solid var(--border);margin-top:4px}
+.eb-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--text)}
+.eb-msg{font-size:13px;color:var(--muted2);max-width:400px;line-height:1.6}
+.eb-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.eb-btn{padding:10px 22px;border-radius:var(--r-md);font-family:var(--font-head);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.eb-btn-primary{background:var(--accent);color:#fff}
+.eb-btn-primary:hover{opacity:.88}
+.eb-btn-secondary{background:transparent;border:1px solid var(--border2);color:var(--muted2)}
+.eb-btn-secondary:hover{color:var(--text);border-color:var(--text)}
+
+/* Toast Notification Stack */
+.toast-stack{
+  position:fixed;bottom:24px;right:24px;
+  display:flex;flex-direction:column-reverse;gap:8px;
+  z-index:8000;pointer-events:none;
+  max-width:340px;
+}
+.toast-item{
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:var(--r-md);padding:12px 16px;
+  display:flex;align-items:flex-start;gap:10px;
+  box-shadow:var(--shadow);pointer-events:all;
+  transform:translateX(120%);opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s ease;
+}
+.toast-item.in{transform:translateX(0);opacity:1}
+.toast-item.out{transform:translateX(120%);opacity:0}
+.toast-item.t-error{border-color:rgba(239,68,68,.4);background:#1a0e0e}
+.toast-item.t-success{border-color:rgba(6,214,160,.3)}
+.toast-item.t-warning{border-color:rgba(245,158,11,.3);background:#1a1508}
+.toast-item.t-info{border-color:rgba(56,189,248,.3)}
+.toast-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.toast-body{flex:1;min-width:0}
+.toast-title{font-weight:500;font-size:13px;line-height:1.3}
+.toast-sub{font-size:11px;color:var(--muted2);margin-top:2px}
+.toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;line-height:1;margin-top:1px}
+.toast-close:hover{color:var(--text)}
+
+/* Inline Error States */
+.field-error{border-color:var(--coral)!important;animation:shake .3s ease}
+.field-error-msg{font-size:11px;color:var(--coral);margin-top:4px;display:flex;align-items:center;gap:4px}
+.field-success{border-color:var(--accent2)!important}
+
+/* Network/API Error Banner */
+.api-error-bar{
+  background:linear-gradient(135deg,#1a0808,#1a1008);
+  border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--r-md);padding:12px 16px;
+  display:none;align-items:center;gap:12px;margin-bottom:16px;
+  animation:slideDown .3s ease;
+}
+.api-error-bar.show{display:flex}
+.api-error-bar .aeb-icon{font-size:16px;flex-shrink:0}
+.api-error-bar .aeb-text{flex:1;font-size:12px;color:#fca5a5}
+.api-error-bar .aeb-retry{
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);
+  color:#f87171;font-size:11px;padding:4px 12px;border-radius:20px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.api-error-bar .aeb-retry:hover{background:rgba(239,68,68,.25)}
+.api-error-bar .aeb-close{background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:0}
+
+/* DB Status Indicator */
+.db-status{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  padding:3px 10px;border-radius:20px;cursor:default;
+}
+.db-status.connected{background:#0a1f14;border:1px solid #1a4a2a;color:var(--accent2)}
+.db-status.disconnected{background:#1a0e0e;border:1px solid #4a1a1a;color:#f87171}
+.db-status.syncing{background:#0e1225;border:1px solid #2a2a5a;color:var(--sky)}
+.db-dot{width:6px;height:6px;border-radius:50%}
+.db-status.connected .db-dot{background:var(--accent2);animation:blink 2s infinite}
+.db-status.disconnected .db-dot{background:#ef4444}
+.db-status.syncing .db-dot{background:var(--sky);animation:blink .8s infinite}
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ring{0%{transform:scale(.6);opacity:.6}100%{transform:scale(1.8);opacity:0}}
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes stepIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes blobMove1{to{transform:translate(60px,80px) scale(1.1)}}
+@keyframes blobMove2{to{transform:translate(-40px,-60px) scale(1.12)}}
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+.login-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:2000;
+  display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+}
+.login-screen.hidden{display:none}
+.login-screen::before,.login-screen::after{
+  content:'';position:fixed;border-radius:50%;filter:blur(100px);opacity:.09;pointer-events:none;
+}
+.login-screen::before{width:600px;height:600px;background:var(--accent);top:-200px;left:-200px;animation:blobMove1 9s ease-in-out infinite alternate}
+.login-screen::after{width:500px;height:500px;background:var(--accent2);bottom:-150px;right:-150px;animation:blobMove2 11s ease-in-out infinite alternate}
+.login-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);width:100%;max-width:430px;position:relative;z-index:1;
+  overflow:hidden;animation:modalIn .35s ease;
+}
+.login-box-inner{padding:42px 38px 34px}
+.login-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-head);font-size:17px;font-weight:700;margin-bottom:32px;color:var(--text)}
+.login-logo-dot{width:10px;height:10px;border-radius:50%;background:var(--accent2);position:relative}
+.login-logo-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--accent2);opacity:.4;animation:ring 1.8s ease-out infinite}
+.login-headline{font-family:var(--font-head);font-size:26px;font-weight:800;line-height:1.2;margin-bottom:8px}
+.login-sub{font-size:13px;color:var(--muted2);margin-bottom:28px;line-height:1.6}
+.login-sub span{color:var(--accent2)}
+
+.btn-linkedin{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:12px;
+  background:#0a66c2;color:#fff;border:none;border-radius:var(--r-md);padding:13px 20px;
+  font-family:var(--font-head);font-size:14px;font-weight:600;cursor:pointer;
+  transition:background .2s,transform .1s;margin-bottom:14px;
+}
+.btn-linkedin:hover{background:#085ba5;transform:translateY(-1px)}
+.login-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:11px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.form-input-login{
+  width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);
+  border-radius:var(--r-sm);padding:11px 14px;font-family:var(--font-body);font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.form-input-login:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.form-input-login.field-error{border-color:var(--coral)}
+.form-input-login::placeholder{color:var(--muted)}
+.email-form{display:flex;flex-direction:column;gap:10px}
+.email-form.hidden{display:none}
+.pw-wrap{position:relative}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px}
+.btn-email-continue{
+  width:100%;background:linear-gradient(90deg,var(--accent),#8b5cf6);border:none;color:#fff;
+  padding:12px;border-radius:var(--r-sm);font-family:var(--font-head);font-size:14px;font-weight:700;
+  cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em;
+}
+.btn-email-continue:hover{opacity:.9;transform:translateY(-1px)}
+.btn-email-continue:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-guest{
+  width:100%;background:transparent;border:1.5px solid var(--border);color:var(--muted2);
+  padding:11px;border-radius:var(--r-sm);font-family:var(--font-body);font-size:13px;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.btn-guest:hover{border-color:var(--text);color:var(--text)}
+.login-toggle{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
+.login-toggle a{color:var(--accent2);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ══════════════════════════════════════
+   DB SCHEMA PANEL (Dev mode)
+══════════════════════════════════════ */
+.schema-panel{
+  position:fixed;top:70px;right:20px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-lg);width:340px;max-height:80vh;overflow-y:auto;
+  z-index:600;display:none;box-shadow:var(--shadow);
+  animation:modalIn .2s ease;
+}
+.schema-panel.open{display:block}
+.sp-head{
+  padding:16px 18px 12px;border-bottom:1px solid var(--border);
+  font-family:var(--font-head);font-size:14px;font-weight:700;
+  display:flex;align-items:center;gap:8px;position:sticky;top:0;background:var(--card);
+}
+.sp-close{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px}
+.sp-section{padding:14px 18px;border-bottom:1px solid var(--border)}
+.sp-section:last-child{border-bottom:none}
+.sp-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sp-db-badge{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.05em}
+.sp-db-badge.mongo{background:#0d2012;color:#4ade80;border:1px solid #1a4a28}
+.sp-db-badge.mysql{background:#0a1828;color:#60a5fa;border:1px solid #1a3850}
+.sp-field{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:11px}
+.sp-field-name{color:var(--sky);font-family:monospace;flex-shrink:0;width:130px;overflow:hidden;text-overflow:ellipsis}
+.sp-field-type{color:var(--muted2);font-family:monospace;font-size:10px}
+.sp-field-note{color:var(--muted);font-size:10px;font-style:italic;margin-top:1px}
+.sp-code{
+  background:var(--bg);border-radius:var(--r-sm);padding:10px 12px;
+  font-family:monospace;font-size:10px;color:#94a3b8;line-height:1.7;
+  border:1px solid var(--border);overflow-x:auto;white-space:pre;
+}
+.sp-code .kw{color:#c084fc}
+.sp-code .str{color:#86efac}
+.sp-code .num{color:#fbbf24}
+.sp-code .cmt{color:var(--muted)}
+
+/* ══════════════════════════════════════
+   SHELL + LAYOUT
+══════════════════════════════════════ */
+.shell{display:none;grid-template-columns:240px 1fr;grid-template-rows:60px 1fr;min-height:100vh}
+.shell.visible{display:grid}
+
+/* TOPBAR */
+.topbar{
+  grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 24px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;height:60px;
+  backdrop-filter:blur(10px);
+}
+.logo{font-family:var(--font-head);font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px;white-space:nowrap}
+.logo-pulse{width:11px;height:11px;border-radius:50%;background:var(--accent2);position:relative}
+.logo-pulse::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--accent2);opacity:.5;animation:ring 1.8s ease-out infinite}
+.search-wrap{flex:1;max-width:480px;position:relative}
+.search-wrap input{
+  width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);
+  border-radius:10px;padding:8px 16px 8px 40px;font-family:var(--font-body);font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.badge-live{
+  background:#0a1e12;color:var(--accent2);font-size:11px;font-weight:500;
+  padding:4px 12px;border-radius:20px;border:1px solid #1a4a2a;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:blink 1.4s infinite}
+.icon-btn{
+  width:34px;height:34px;border-radius:50%;background:var(--card);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;
+  position:relative;transition:border-color .2s;
+}
+.icon-btn:hover{border-color:var(--accent)}
+.notif-badge{
+  position:absolute;top:-3px;right:-3px;width:15px;height:15px;
+  background:var(--coral);border-radius:50%;font-size:8px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;color:#fff;border:2px solid var(--surface);
+}
+.profile-btn{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:12px;cursor:pointer;color:#fff;flex-shrink:0;
+}
+.profile-dropdown-wrap{position:relative}
+.profile-dropdown{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);
+  min-width:210px;z-index:400;box-shadow:var(--shadow);animation:modalIn .15s ease;overflow:hidden;
+}
+.profile-dropdown.open{display:block}
+.pd-header{padding:12px 14px 10px;border-bottom:1px solid var(--border)}
+.pd-name{font-weight:600;font-size:13px}
+.pd-email{font-size:11px;color:var(--muted);margin-top:1px}
+.pd-item{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:12px;color:var(--muted2);cursor:pointer;transition:background .15s,color .15s}
+.pd-item:hover{background:var(--pill);color:var(--text)}
+.pd-item.danger:hover{color:var(--coral)}
+
+/* SIDEBAR */
+.sidebar{
+  background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 0 24px;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto;
+}
+.sidebar-section{padding:0 14px 14px}
+.sidebar-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 8px 8px;display:block}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);
+  cursor:pointer;color:var(--muted2);font-size:13px;transition:background .15s,color .15s;
+  margin-bottom:2px;user-select:none;
+}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:var(--pill);color:var(--text)}
+.nav-icon{width:20px;font-size:14px;flex-shrink:0;text-align:center}
+.nav-count{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;min-width:22px;text-align:center}
+.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-left:2px}
+.sidebar-divider{border:none;border-top:1px solid var(--border);margin:6px 14px 14px}
+
+/* Profile card in sidebar */
+.profile-card{
+  margin:0 12px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:14px;cursor:pointer;transition:border-color .2s;
+}
+.profile-card:hover{border-color:var(--accent)}
+.profile-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;color:#fff;margin-bottom:10px;
+}
+.profile-name{font-weight:600;font-size:13px;margin-bottom:2px}
+.profile-sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+.profile-tags{display:flex;flex-wrap:wrap;gap:4px}
+.ptag{background:var(--pill);color:var(--accent2);font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid #253450}
+.profile-match-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--muted)}
+.profile-match-num{font-weight:600;color:var(--accent2);font-size:13px}
+.mini-bar{height:3px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden}
+.mini-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+/* MAIN */
+.main{padding:24px 28px;overflow-y:auto;min-height:calc(100vh - 60px)}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:18px 16px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;cursor:default;
+}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.s1::before{background:linear-gradient(90deg,var(--accent),#8b5cf6)}
+.stat-card.s2::before{background:linear-gradient(90deg,var(--accent3),#ef4444)}
+.stat-card.s3::before{background:linear-gradient(90deg,var(--accent2),var(--sky))}
+.stat-card.s4::before{background:linear-gradient(90deg,var(--coral),var(--purple))}
+.stat-num{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1.1;margin-bottom:3px}
+.stat-label{font-size:11px;color:var(--muted)}
+.stat-delta{font-size:11px;margin-top:8px}
+.stat-icon{position:absolute;right:14px;top:18px;font-size:22px;opacity:.18}
+
+/* Calendar */
+.cal-section{margin-bottom:24px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-title{font-family:var(--font-head);font-size:14px;font-weight:700}
+.cal-nav{display:flex;gap:6px}
+.cal-nav-btn{
+  width:26px;height:26px;border-radius:6px;background:var(--card);border:1px solid var(--border);
+  color:var(--muted2);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.cal-nav-btn:hover{border-color:var(--accent);color:var(--text)}
+.calendar-strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.calendar-strip::-webkit-scrollbar{display:none}
+.cal-day{
+  flex-shrink:0;width:52px;text-align:center;padding:9px 6px;
+  border-radius:10px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;
+  transition:border-color .2s,background .2s;
+}
+.cal-day:hover{border-color:var(--accent)}
+.cal-day.today{background:var(--accent);border-color:var(--accent)}
+.cal-day.has-event{border-color:#3d3580}
+.cal-day-name{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.cal-day.today .cal-day-name{color:rgba(255,255,255,.6)}
+.cal-day-num{font-family:var(--font-head);font-size:15px;font-weight:700}
+.cal-dots{display:flex;justify-content:center;gap:3px;margin-top:5px;min-height:5px}
+.cal-dot{width:4px;height:4px;border-radius:50%}
+
+/* Filters */
+.filters-bar{display:flex;align-items:center;gap:7px;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{
+  padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;
+  color:var(--muted2);font-size:12px;font-family:var(--font-body);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.filter-btn:hover{border-color:var(--accent);color:var(--text)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.filter-sep{width:1px;height:22px;background:var(--border);margin:0 2px}
+.sort-select{
+  background:var(--card);border:1.5px solid var(--border);color:var(--muted2);font-size:12px;
+  font-family:var(--font-body);padding:6px 12px;border-radius:var(--r-sm);outline:none;cursor:pointer;
+  margin-left:auto;transition:border-color .15s;
+}
+.sort-select:hover{border-color:var(--accent)}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.section-title{font-family:var(--font-head);font-size:16px;font-weight:700}
+.section-count{font-size:12px;color:var(--muted)}
+.refresh-btn{
+  margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--border);
+  color:var(--muted2);font-size:11px;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s;
+}
+.refresh-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.refresh-btn.spinning svg{animation:spin .7s linear infinite}
+
+/* Opportunity Cards */
+.feed{display:flex;flex-direction:column;gap:10px}
+.opp-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-lg);
+  padding:17px 20px;display:grid;grid-template-columns:48px 1fr auto;
+  gap:15px;align-items:start;transition:border-color .2s,transform .15s,box-shadow .2s;
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.opp-card:hover{border-color:var(--accent);transform:translateX(3px);box-shadow:-3px 0 0 var(--accent)}
+.opp-card.urgent-card{border-color:#3a1818}
+.opp-card.urgent-card:hover{border-color:var(--coral);box-shadow:-3px 0 0 var(--coral)}
+.opp-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid rgba(255,255,255,.06)}
+.opp-meta{min-width:0}
+.opp-title{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opp-source{font-size:11px;color:var(--muted);margin-bottom:7px}
+.opp-desc{font-size:12px;color:var(--muted2);margin-bottom:9px;line-height:1.5}
+.opp-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px}
+.tag{font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;border:1px solid transparent}
+.tag-hack{background:#1a1a38;color:var(--accent);border-color:#2a2a58}
+.tag-intern{background:#142830;color:var(--accent2);border-color:#1e3e48}
+.tag-scholar{background:#281e10;color:var(--accent3);border-color:#3e2e18}
+.tag-event{background:#221830;color:var(--purple);border-color:#382050}
+.tag-prize{background:#241414;color:#f87171;border-color:#3c2020}
+.tag-new{background:#122010;color:#4ade80;border-color:#1e3a1e}
+.tag-remote{background:var(--pill);color:var(--muted2);border-color:var(--border)}
+.tag-stipend{background:#1e1c10;color:#d4b860;border-color:#3c3618}
+.tag-arts{background:#1e1030;color:#c084fc;border-color:#341a50}
+.tag-sports{background:#101e10;color:#4ade80;border-color:#1a3a1a}
+.tag-leadership{background:#201018;color:#f472b6;border-color:#381828}
+.tag-research{background:#0e1c2e;color:var(--sky);border-color:#162a3e}
+.match-row{display:flex;align-items:center;gap:8px}
+.match-bar{flex:1;max-width:140px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.match-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.match-label{font-size:10px;color:var(--muted);white-space:nowrap}
+.opp-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;min-width:110px}
+.deadline-badge{text-align:right}
+.days-num{font-family:var(--font-head);font-size:24px;font-weight:800;line-height:1}
+.days-num.urgent{color:var(--coral)}
+.days-num.soon{color:var(--accent3)}
+.days-num.ok{color:var(--accent2)}
+.days-label{font-size:10px;color:var(--muted);margin-top:1px}
+.deadline-date{font-size:10px;color:var(--muted);margin-top:1px}
+.apply-btn{
+  padding:8px 16px;border-radius:var(--r-sm);background:var(--accent);color:#fff;
+  font-size:12px;font-weight:600;font-family:var(--font-head);border:none;cursor:pointer;
+  white-space:nowrap;transition:opacity .15s,transform .1s;
+}
+.apply-btn:hover{opacity:.85;transform:scale(1.03)}
+.save-btn{
+  position:absolute;top:13px;right:13px;background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:16px;padding:4px 6px;border-radius:6px;transition:color .15s,background .15s;line-height:1;
+}
+.save-btn:hover{color:var(--accent3);background:rgba(245,158,11,.1)}
+.save-btn.saved{color:var(--accent3)}
+.source-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* Skeleton */
+.skeleton-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:17px 20px;display:grid;grid-template-columns:48px 1fr;gap:15px}
+.skel{background:var(--border);border-radius:4px;animation:shimmer 1.4s ease-in-out infinite}
+@keyframes shimmer{0%,100%{opacity:1}50%{opacity:.35}}
+.skel-icon{width:48px;height:48px;border-radius:12px}
+.skel-title{height:15px;width:55%;margin-bottom:8px}
+.skel-sub{height:10px;width:38%;margin-bottom:10px}
+.skel-desc{height:10px;width:88%;margin-bottom:5px}
+.skel-desc2{height:10px;width:65%}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+.empty-title{font-family:var(--font-head);font-size:16px;margin-bottom:6px;color:var(--text)}
+.empty-sub{font-size:13px}
+
+/* Alert banner */
+.alert-banner{
+  background:#160d24;border:1px solid #4a2d80;border-radius:var(--r-md);padding:12px 16px;
+  display:none;align-items:center;gap:12px;margin-bottom:18px;font-size:13px;animation:slideDown .4s ease;
+}
+.alert-banner.show{display:flex}
+.alert-close{margin-left:auto;background:none;border:none;color:var(--muted2);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px;border-radius:4px;transition:color .15s;flex-shrink:0}
+.alert-close:hover{color:var(--text)}
+
+/* ══════════════════════════════════════
+   ONBOARDING
+══════════════════════════════════════ */
+.onboard-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+}
+.onboard-screen.hidden{display:none}
+.onboard-screen::before,.onboard-screen::after{
+  content:'';position:fixed;border-radius:50%;filter:blur(90px);opacity:.1;pointer-events:none;
+}
+.onboard-screen::before{width:500px;height:500px;background:var(--accent);top:-100px;left:-100px;animation:blobMove1 8s ease-in-out infinite alternate}
+.onboard-screen::after{width:400px;height:400px;background:var(--accent2);bottom:-80px;right:-80px;animation:blobMove2 10s ease-in-out infinite alternate}
+.onboard-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);width:100%;max-width:540px;position:relative;z-index:1;overflow:hidden;max-height:92vh;display:flex;flex-direction:column}
+.ob-progress-track{height:3px;background:var(--border);width:100%;flex-shrink:0}
+.ob-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease}
+.ob-inner{padding:34px 36px 28px;overflow-y:auto;flex:1}
+.ob-steps{display:flex;align-items:center;gap:6px;margin-bottom:26px}
+.ob-step-dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:background .3s,width .3s}
+.ob-step-dot.active{background:var(--accent);width:22px;border-radius:4px}
+.ob-step-dot.done{background:var(--accent2)}
+.ob-step-label{margin-left:auto;font-size:11px;color:var(--muted)}
+.ob-step{display:none}
+.ob-step.active{display:block;animation:stepIn .3s ease}
+.ob-headline{font-family:var(--font-head);font-size:22px;font-weight:800;line-height:1.2;margin-bottom:6px}
+.ob-subhead{font-size:13px;color:var(--muted2);margin-bottom:24px;line-height:1.6}
+.ob-subhead span{color:var(--accent2)}
+.ob-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;margin-bottom:26px;color:var(--text)}
+.ob-logo-dot{width:9px;height:9px;border-radius:50%;background:var(--accent2);position:relative}
+.ob-logo-dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1.5px solid var(--accent2);opacity:.4;animation:ring 1.8s ease-out infinite}
+
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.form-input{
+  width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);
+  border-radius:var(--r-sm);padding:9px 12px;font-family:var(--font-body);font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.form-input::placeholder{color:var(--muted)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Skills Wrap */
+.skills-wrap{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+  cursor:text;transition:border-color .2s;min-height:44px;
+}
+.skills-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.08)}
+.skill-pill{
+  background:var(--pill);color:var(--accent2);font-size:11px;padding:3px 9px;
+  border-radius:20px;border:1px solid #253450;display:flex;align-items:center;gap:4px;
+}
+.skill-remove{cursor:pointer;color:var(--muted);font-size:12px;line-height:1;transition:color .15s}
+.skill-remove:hover{color:var(--coral)}
+.skill-add-input{background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:12px;min-width:80px}
+.skill-add-input::placeholder{color:var(--muted)}
+
+/* Skill category browser */
+.skill-cats{margin-top:16px}
+.skill-cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.skill-cat-tab{
+  padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);
+  font-size:11px;cursor:pointer;transition:all .15s;color:var(--muted2);background:transparent;
+}
+.skill-cat-tab:hover{border-color:var(--accent);color:var(--text)}
+.skill-cat-tab.active{background:var(--pill);border-color:var(--accent);color:var(--accent2)}
+.skill-cat-grid{display:flex;flex-wrap:wrap;gap:6px}
+.ob-skill-chip{
+  padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);
+  font-size:11px;cursor:pointer;transition:all .15s;color:var(--muted2);background:transparent;
+  user-select:none;
+}
+.ob-skill-chip:hover{border-color:var(--accent);color:var(--text)}
+.ob-skill-chip.added{opacity:.4;pointer-events:none;text-decoration:line-through}
+
+/* Location & Source cards */
+.location-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.loc-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-md);
+  padding:13px;cursor:pointer;transition:border-color .2s,background .2s;text-align:center;
+}
+.loc-card:hover{border-color:var(--accent)}
+.loc-card.selected{border-color:var(--accent2);background:#0a1e18}
+.loc-card-icon{font-size:22px;margin-bottom:5px}
+.loc-card-label{font-size:12px;font-weight:600}
+.loc-card-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
+.source-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 14px;
+  cursor:pointer;transition:border-color .2s,background .2s;display:flex;align-items:center;gap:9px;
+}
+.source-card:hover{border-color:var(--accent);background:var(--card2)}
+.source-card.selected{border-color:var(--accent2);background:#0a1e18}
+.source-card.selected .source-check{opacity:1}
+.source-dot-lg{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.source-name{font-size:12px;font-weight:600;flex:1}
+.source-desc{font-size:10px;color:var(--muted)}
+.source-check{font-size:13px;color:var(--accent2);opacity:0;transition:opacity .2s}
+.source-hint{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}
+
+/* Avatar upload */
+.avatar-upload-area{display:flex;flex-direction:column;align-items:center;margin-bottom:20px}
+.avatar-ring{
+  width:90px;height:90px;border-radius:50%;border:2px dashed var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;
+  transition:border-color .2s;overflow:hidden;margin-bottom:8px;background:var(--card);
+}
+.avatar-ring:hover{border-color:var(--accent)}
+.avatar-placeholder{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10px;text-align:center;padding:8px}
+.avatar-placeholder-icon{font-size:26px}
+.avatar-initials-preview{display:none;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));align-items:center;justify-content:center;font-weight:700;font-size:26px;color:#fff}
+#avatar-file{display:none}
+
+/* Onboard nav */
+.ob-nav{display:flex;align-items:center;justify-content:space-between;margin-top:26px;gap:12px}
+.ob-btn-back{padding:10px 22px;border-radius:var(--r-sm);background:transparent;border:1.5px solid var(--border);color:var(--muted2);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .15s}
+.ob-btn-back:hover{border-color:var(--text);color:var(--text)}
+.ob-btn-next{padding:11px 28px;border-radius:var(--r-sm);background:linear-gradient(90deg,var(--accent),#8b5cf6);border:none;color:#fff;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;flex:1;max-width:220px;margin-left:auto;letter-spacing:.02em}
+.ob-btn-next:hover{opacity:.9;transform:translateY(-1px)}
+
+/* Profile Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;width:440px;max-width:95vw;animation:modalIn .22s ease;position:relative;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:20px}
+.modal-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px;transition:color .15s}
+.modal-close:hover{color:var(--text)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-cancel{padding:9px 20px;border-radius:var(--r-sm);background:transparent;border:1.5px solid var(--border);color:var(--muted2);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .15s}
+.btn-cancel:hover{border-color:var(--text);color:var(--text)}
+.btn-save{padding:9px 22px;border-radius:var(--r-sm);background:var(--accent);border:none;color:#fff;font-family:var(--font-head);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn-save:hover{opacity:.88}
+
+/* DB Panel toggle button */
+.db-panel-btn{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+  border:1.5px solid var(--border);background:transparent;color:var(--muted2);
+  font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--font-body);
+}
+.db-panel-btn:hover{border-color:var(--sky);color:var(--sky)}
+
+/* Responsive */
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr;grid-template-rows:60px auto 1fr}
+  .sidebar{position:relative;top:0;height:auto;display:none}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .opp-card{grid-template-columns:44px 1fr}
+  .opp-right{display:none}
+  .schema-panel{width:calc(100vw - 40px);right:20px}
+}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+  .main{padding:14px}
+  .login-box-inner{padding:28px 22px 24px}
+  .ob-inner{padding:24px 22px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ GLOBAL ERROR BOUNDARY ══ -->
+<div class="error-boundary" id="error-boundary">
+  <div class="eb-icon">⚠️</div>
+  <div class="eb-title" id="eb-title">Something went wrong</div>
+  <div class="eb-code" id="eb-code">ERR_UNKNOWN</div>
+  <div class="eb-msg" id="eb-msg">An unexpected error occurred. Please try again.</div>
+  <div class="eb-actions">
+    <button class="eb-btn eb-btn-primary" onclick="retryAfterError()">↺ Retry</button>
+    <button class="eb-btn eb-btn-secondary" onclick="reloadApp()">⟳ Reload App</button>
+    <button class="eb-btn eb-btn-secondary" onclick="clearAndReload()">🗑 Clear Data & Restart</button>
+  </div>
+</div>
+
+<!-- ══ TOAST STACK ══ -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<!-- ══ DB SCHEMA PANEL ══ -->
+<div class="schema-panel" id="schema-panel">
+  <div class="sp-head">
+    🗄 Database Schema
+    <button class="sp-close" onclick="document.getElementById('schema-panel').classList.remove('open')">✕</button>
+  </div>
+
+  <!-- MongoDB -->
+  <div class="sp-section">
+    <div class="sp-section-title">
+      Opportunities Collection
+      <span class="sp-db-badge mongo">MongoDB</span>
+      <span class="sp-db-badge mysql" style="margin-left:4px">MySQL</span>
+    </div>
+    <div class="sp-field"><span class="sp-field-name">_id / id</span><div><div class="sp-field-type">ObjectId / INT PK</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">event_name</span><div><div class="sp-field-type">String / VARCHAR(255)</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">source</span><div><div class="sp-field-type">String / VARCHAR(100)</div><div class="sp-field-note">LinkedIn | Unstop | Internshala…</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">category</span><div><div class="sp-field-type">String / ENUM</div><div class="sp-field-note">hackathon|internship|scholarship|event</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">required_skills</span><div><div class="sp-field-type">[String] / JSON</div><div class="sp-field-note">Matched against user.skills for ranking</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">skill_categories</span><div><div class="sp-field-type">[String] / JSON</div><div class="sp-field-note">tech|arts|sports|leadership|research…</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">deadline_ts</span><div><div class="sp-field-type">Date / DATETIME</div><div class="sp-field-note">Used for days_left computation</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">reward_raw</span><div><div class="sp-field-type">Number / INT</div><div class="sp-field-note">Numeric for sorting/filtering</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">match_score</span><div><div class="sp-field-type">Number / INT</div><div class="sp-field-note">Computed per-user on API layer</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">remote / new_today</span><div><div class="sp-field-type">Boolean / TINYINT(1)</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">apply_link</span><div><div class="sp-field-type">String / VARCHAR(500)</div><div class="sp-field-note">Validated URL — never stored raw user input</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">updated_at</span><div><div class="sp-field-type">Date / TIMESTAMP</div><div class="sp-field-note">ON UPDATE CURRENT_TIMESTAMP</div></div></div>
+  </div>
+
+  <!-- Users -->
+  <div class="sp-section">
+    <div class="sp-section-title">Users Collection <span class="sp-db-badge mongo">MongoDB</span></div>
+    <div class="sp-field"><span class="sp-field-name">email</span><div><div class="sp-field-type">String (unique, indexed)</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">password_hash</span><div><div class="sp-field-type">String</div><div class="sp-field-note">bcrypt(cost=12) — never plaintext</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">skills</span><div><div class="sp-field-type">[String]</div><div class="sp-field-note">All domains: tech, arts, sports, soft…</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">skill_domains</span><div><div class="sp-field-type">[String]</div><div class="sp-field-note">Derived from skills for fast filtering</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">saved_opportunities</span><div><div class="sp-field-type">[ObjectId]</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">linkedin_token</span><div><div class="sp-field-type">String (encrypted)</div><div class="sp-field-note">AES-256 at rest, never in logs</div></div></div>
+    <div class="sp-field"><span class="sp-field-name">last_login</span><div><div class="sp-field-type">Date</div></div></div>
+  </div>
+
+  <!-- Skill-based match algo -->
+  <div class="sp-section">
+    <div class="sp-section-title">Skill-Based Match Algorithm</div>
+    <div class="sp-code"><span class="cmt">// Node.js — runs on /api/opportunities</span>
+<span class="kw">function</span> computeMatch(user, opp) {
+  <span class="kw">const</span> userSet = <span class="kw">new</span> Set(
+    user.skills.map(s => s.toLowerCase())
+  );
+  <span class="kw">const</span> required = opp.required_skills || [];
+  <span class="kw">const</span> hits = required.filter(
+    s => userSet.has(s.toLowerCase())
+  );
+  <span class="kw">const</span> base = required.length
+    ? Math.round((hits.length / required.length) * <span class="num">70</span>)
+    : <span class="num">50</span>;
+  <span class="cmt">// bonus: domain match (arts/sports/tech)</span>
+  <span class="kw">const</span> domainBonus = user.skill_domains.some(
+    d => opp.skill_categories?.includes(d)
+  ) ? <span class="num">20</span> : <span class="num">0</span>;
+  <span class="kw">return</span> Math.min(base + domainBonus + <span class="num">10</span>, <span class="num">100</span>);
+}</div>
+  </div>
+
+  <!-- Error handling -->
+  <div class="sp-section">
+    <div class="sp-section-title">Error Handling Strategy</div>
+    <div class="sp-code"><span class="cmt">// Express middleware</span>
+app.use((err, req, res, next) => {
+  <span class="kw">const</span> code = err.code || <span class="str">'ERR_INTERNAL'</span>;
+  logger.error({ code, msg: err.message });
+  res.status(err.status || <span class="num">500</span>).json({
+    error: { code, message: err.message },
+    fallback: <span class="kw">true</span>
+  });
+});
+
+<span class="cmt">// DB connection with retry</span>
+mongoose.connect(MONGO_URI, {
+  serverSelectionTimeoutMS: <span class="num">5000</span>,
+  retryWrites: <span class="kw">true</span>,
+  maxPoolSize: <span class="num">10</span>
+}).catch(err => {
+  <span class="cmt">// Fallback to read-only cache</span>
+  useCachedData();
+});</div>
+  </div>
+
+  <!-- MySQL schema snippet -->
+  <div class="sp-section">
+    <div class="sp-section-title">MySQL DDL <span class="sp-db-badge mysql">MySQL</span></div>
+    <div class="sp-code"><span class="kw">CREATE TABLE</span> opportunities (
+  id <span class="kw">INT</span> PRIMARY KEY AUTO_INCREMENT,
+  event_name <span class="kw">VARCHAR</span>(<span class="num">255</span>) NOT NULL,
+  required_skills <span class="kw">JSON</span>,
+  skill_categories <span class="kw">JSON</span>,
+  category <span class="kw">ENUM</span>(<span class="str">'hackathon'</span>,<span class="str">'internship'</span>,
+    <span class="str">'scholarship'</span>,<span class="str">'event'</span>) NOT NULL,
+  deadline_ts <span class="kw">DATETIME</span>,
+  reward_raw <span class="kw">INT DEFAULT</span> <span class="num">0</span>,
+  match_score <span class="kw">INT DEFAULT</span> <span class="num">50</span>,
+  updated_at <span class="kw">TIMESTAMP DEFAULT</span>
+    CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  <span class="kw">INDEX</span> idx_category (category),
+  <span class="kw">INDEX</span> idx_deadline (deadline_ts),
+  <span class="kw">INDEX</span> idx_match (match_score)
+);</div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-box-inner">
+      <div class="login-logo"><div class="login-logo-dot"></div>Opportunity Pulse</div>
+      <div class="login-headline">Find your next<br>big opportunity ✦</div>
+      <div class="login-sub">AI-powered discovery for <span>every student, every skill</span> — tech, arts, sports, leadership & more.</div>
+      <button class="btn-linkedin" onclick="loginWithLinkedIn()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        Continue with LinkedIn
+      </button>
+      <div class="login-divider">or continue with email</div>
+      <div class="email-form" id="email-login-form">
+        <div>
+          <input class="form-input-login" id="login-email" type="email" placeholder="your@email.com" autocomplete="email" oninput="clearFieldError(this)">
+        </div>
+        <div class="pw-wrap">
+          <input class="form-input-login" id="login-password" type="password" placeholder="Password" autocomplete="current-password" oninput="clearFieldError(this)">
+          <button class="pw-toggle" type="button" onclick="togglePw('login-password',this)">👁</button>
+        </div>
+        <button class="btn-email-continue" id="login-submit-btn" onclick="loginWithEmail()">Sign In →</button>
+        <div class="login-toggle">No account? <a onclick="switchToSignup()">Sign up free</a></div>
+      </div>
+      <div class="email-form hidden" id="email-signup-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <input class="form-input-login" id="signup-first" type="text" placeholder="First name" oninput="clearFieldError(this)">
+          <input class="form-input-login" id="signup-last" type="text" placeholder="Last name">
+        </div>
+        <input class="form-input-login" id="signup-email" type="email" placeholder="your@email.com" oninput="clearFieldError(this)">
+        <div class="pw-wrap">
+          <input class="form-input-login" id="signup-password" type="password" placeholder="Password (min 6 chars)" oninput="clearFieldError(this)">
+          <button class="pw-toggle" type="button" onclick="togglePw('signup-password',this)">👁</button>
+        </div>
+        <button class="btn-email-continue" id="signup-submit-btn" onclick="signUpWithEmail()">Create Account →</button>
+        <div class="login-toggle">Have an account? <a onclick="switchToLogin()">Sign in</a></div>
+      </div>
+      <button class="btn-guest" onclick="continueAsGuest()" style="margin-top:12px">Continue as Guest</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ONBOARDING ══ -->
+<div class="onboard-screen hidden" id="onboard-screen">
+  <div class="onboard-box">
+    <div class="ob-progress-track"><div class="ob-progress-fill" id="ob-progress" style="width:25%"></div></div>
+    <div class="ob-inner">
+      <div class="ob-logo"><div class="ob-logo-dot"></div>Opportunity Pulse</div>
+      <div class="ob-steps">
+        <div class="ob-step-dot active" id="dot-0"></div>
+        <div class="ob-step-dot" id="dot-1"></div>
+        <div class="ob-step-dot" id="dot-2"></div>
+        <div class="ob-step-dot" id="dot-3"></div>
+        <span class="ob-step-label" id="ob-step-label">Step 1 of 4</span>
+      </div>
+
+      <!-- STEP 1: Profile -->
+      <div class="ob-step active" id="step-0">
+        <div class="ob-headline">Create your<br>student profile ✦</div>
+        <div class="ob-subhead">Tell us about yourself so we find <span>perfectly matched</span> opportunities — regardless of your field.</div>
+        <div class="avatar-upload-area">
+          <div class="avatar-ring" id="avatar-ring" onclick="document.getElementById('avatar-file').click()">
+            <div class="avatar-placeholder" id="avatar-placeholder"><span class="avatar-placeholder-icon">📷</span><span>Upload photo</span></div>
+            <div class="avatar-initials-preview" id="avatar-initials"></div>
+            <img id="avatar-img-preview" style="display:none" alt="">
+          </div>
+          <span style="font-size:11px;color:var(--muted)">Click to upload (optional)</span>
+          <input type="file" id="avatar-file" accept="image/*" onchange="handleAvatarUpload(event)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name *</label>
+            <input class="form-input" id="ob-first" type="text" placeholder="e.g. Arjun" oninput="updateAvatarPreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" id="ob-last" type="text" oninput="updateAvatarPreview()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Year of Study</label>
+            <select class="form-input" id="ob-year">
+              <option value="">Select</option>
+              <option>1st Year</option><option>2nd Year</option>
+              <option selected>3rd Year</option><option>4th Year</option><option>Postgraduate</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Degree / Field</label>
+            <input class="form-input" id="ob-degree" type="text" placeholder="e.g. B.Tech CSE / BFA / BSc">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">College / University</label>
+          <input class="form-input" id="ob-college" type="text" placeholder="e.g. BITS Pilani / NIFT / MIT">
+        </div>
+        <div class="ob-nav"><button class="ob-btn-next" onclick="obNext()">Continue →</button></div>
+      </div>
+
+      <!-- STEP 2: Skills (expanded) -->
+      <div class="ob-step" id="step-1">
+        <div class="ob-headline">What are your<br>skills & interests? 🧠</div>
+        <div class="ob-subhead">We match <span>all kinds of students</span> — tech, arts, sports, business, research & more. Add yours!</div>
+        <div class="form-group">
+          <label class="form-label">Your Skills (Enter or comma to add)</label>
+          <div class="skills-wrap" id="ob-skills-wrap" onclick="document.getElementById('ob-skill-input').focus()">
+            <input class="skill-add-input" id="ob-skill-input" placeholder="Type a skill…" onkeydown="handleObSkillKey(event)" oninput="handleObSkillInput(event)">
+          </div>
+        </div>
+        <div class="skill-cats">
+          <div class="skill-cat-tabs" id="skill-cat-tabs"></div>
+          <div class="skill-cat-grid" id="skill-cat-grid"></div>
+        </div>
+        <div class="ob-nav">
+          <button class="ob-btn-back" onclick="obBack()">← Back</button>
+          <button class="ob-btn-next" onclick="obNext()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Location -->
+      <div class="ob-step" id="step-2">
+        <div class="ob-headline">Where are<br>you based? 📍</div>
+        <div class="ob-subhead">Helps us surface <span>local + remote</span> opportunities near you.</div>
+        <div class="location-options">
+          <div class="loc-card selected" id="loc-remote" onclick="selectLocation('remote')"><div class="loc-card-icon">🌐</div><div class="loc-card-label">Remote / Anywhere</div><div class="loc-card-sub">All opportunities</div></div>
+          <div class="loc-card" id="loc-india" onclick="selectLocation('india')"><div class="loc-card-icon">🇮🇳</div><div class="loc-card-label">India</div><div class="loc-card-sub">On-campus + remote</div></div>
+          <div class="loc-card" id="loc-us" onclick="selectLocation('us')"><div class="loc-card-icon">🇺🇸</div><div class="loc-card-label">United States</div><div class="loc-card-sub">US-based + remote</div></div>
+          <div class="loc-card" id="loc-other" onclick="selectLocation('other')"><div class="loc-card-icon">🗺️</div><div class="loc-card-label">Other</div><div class="loc-card-sub">International</div></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">City / State (optional)</label>
+          <input class="form-input" id="ob-city" type="text" placeholder="e.g. Mumbai, Maharashtra">
+        </div>
+        <div class="ob-nav">
+          <button class="ob-btn-back" onclick="obBack()">← Back</button>
+          <button class="ob-btn-next" onclick="obNext()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Sources -->
+      <div class="ob-step" id="step-3">
+        <div class="ob-headline">Choose your<br>opportunity sources 🔗</div>
+        <div class="ob-subhead">Select platforms to pull <span>live listings</span> from. Change anytime.</div>
+        <div class="source-grid">
+          <div class="source-card selected" id="src-Unstop" onclick="toggleSource(this,'Unstop')"><div class="source-dot-lg" style="background:#6366f1"></div><div><div class="source-name">Unstop</div><div class="source-desc">Hackathons & contests</div></div><div class="source-check">✓</div></div>
+          <div class="source-card selected" id="src-Internshala" onclick="toggleSource(this,'Internshala')"><div class="source-dot-lg" style="background:#06d6a0"></div><div><div class="source-name">Internshala</div><div class="source-desc">Internships & training</div></div><div class="source-check">✓</div></div>
+          <div class="source-card selected" id="src-LinkedIn" onclick="toggleSource(this,'LinkedIn')"><div class="source-dot-lg" style="background:#0a66c2"></div><div><div class="source-name">LinkedIn</div><div class="source-desc">Jobs & workshops</div></div><div class="source-check">✓</div></div>
+          <div class="source-card selected" id="src-AICTE Portal" onclick="toggleSource(this,'AICTE Portal')"><div class="source-dot-lg" style="background:#f59e0b"></div><div><div class="source-name">AICTE Portal</div><div class="source-desc">Govt scholarships</div></div><div class="source-check">✓</div></div>
+          <div class="source-card selected" id="src-Devfolio" onclick="toggleSource(this,'Devfolio')"><div class="source-dot-lg" style="background:#a855f7"></div><div><div class="source-name">Devfolio</div><div class="source-desc">Dev hackathons</div></div><div class="source-check">✓</div></div>
+          <div class="source-card" id="src-HackerEarth" onclick="toggleSource(this,'HackerEarth')"><div class="source-dot-lg" style="background:#ef4444"></div><div><div class="source-name">HackerEarth</div><div class="source-desc">Coding challenges</div></div><div class="source-check">✓</div></div>
+          <div class="source-card" id="src-YIF" onclick="toggleSource(this,'YIF')"><div class="source-dot-lg" style="background:#f472b6"></div><div><div class="source-name">Young India Fellowship</div><div class="source-desc">Leadership & fellowships</div></div><div class="source-check">✓</div></div>
+          <div class="source-card" id="src-NSP" onclick="toggleSource(this,'NSP')"><div class="source-dot-lg" style="background:#38bdf8"></div><div><div class="source-name">NSP India</div><div class="source-desc">National scholarships</div></div><div class="source-check">✓</div></div>
+        </div>
+        <div class="source-hint" id="source-count-hint">5 sources selected</div>
+        <div class="ob-nav">
+          <button class="ob-btn-back" onclick="obBack()">← Back</button>
+          <button class="ob-btn-next" onclick="obFinish()" style="background:linear-gradient(90deg,var(--accent2),var(--accent))">🚀 Launch Dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN SHELL ══ -->
+<div class="shell" id="main-shell">
+  <header class="topbar">
+    <div class="logo"><div class="logo-pulse"></div>Opportunity Pulse</div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search by skill, field, prize, source…" oninput="renderFeed()">
+    </div>
+    <div class="badge-live" onclick="manualRefresh()" title="Click to refresh">
+      <span class="live-dot"></span>
+      <span id="last-updated-label">Live</span>
+    </div>
+    <div class="topbar-right">
+      <!-- DB Status -->
+      <div class="db-status connected" id="db-status-badge" title="Database status">
+        <div class="db-dot"></div>
+        <span id="db-status-text">DB Live</span>
+      </div>
+      <!-- Schema panel toggle -->
+      <button class="db-panel-btn" onclick="document.getElementById('schema-panel').classList.toggle('open')" title="View DB schema">
+        🗄 Schema
+      </button>
+      <div class="icon-btn" title="Notifications">
+        🔔<div class="notif-badge" id="notif-count">0</div>
+      </div>
+      <div class="profile-dropdown-wrap">
+        <div class="profile-btn" id="topbar-profile-btn" onclick="toggleProfileDropdown()">?</div>
+        <div class="profile-dropdown" id="profile-dropdown">
+          <div class="pd-header">
+            <div class="pd-name" id="pd-name">Student</div>
+            <div class="pd-email" id="pd-email">—</div>
+          </div>
+          <div class="pd-item" onclick="closeProfileDropdown();openProfileModal()">✏️ &nbsp;Edit Profile</div>
+          <div class="pd-item" onclick="closeProfileDropdown();manualRefresh()">🔄 &nbsp;Refresh Data</div>
+          <div class="pd-item" onclick="closeProfileDropdown();document.getElementById('schema-panel').classList.toggle('open')">🗄 &nbsp;View DB Schema</div>
+          <div class="pd-item danger" onclick="closeProfileDropdown();logOut()">↩ &nbsp;Sign Out</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Discover</span>
+      <div class="nav-item active" onclick="setCategory('all',this)"><span class="nav-icon">◈</span>All Opportunities<span class="nav-count" id="count-all">0</span></div>
+      <div class="nav-item" onclick="setCategory('hackathon',this)"><span class="nav-icon">⚡</span>Hackathons<span class="nav-count" id="count-hackathon">0</span></div>
+      <div class="nav-item" onclick="setCategory('internship',this)"><span class="nav-icon">💼</span>Internships<span class="nav-count" id="count-internship">0</span></div>
+      <div class="nav-item" onclick="setCategory('scholarship',this)"><span class="nav-icon">🎓</span>Scholarships<span class="nav-count" id="count-scholarship">0</span></div>
+      <div class="nav-item" onclick="setCategory('event',this)"><span class="nav-icon">📡</span>Events & Workshops<span class="nav-count" id="count-event">0</span></div>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section" id="sources-section">
+      <span class="sidebar-label">Sources</span>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section" style="padding-bottom:8px"><span class="sidebar-label">My Profile</span></div>
+    <div class="profile-card" onclick="openProfileModal()" title="Edit profile">
+      <div class="profile-avatar" id="sidebar-avatar">?</div>
+      <div class="profile-name" id="sidebar-name">Student</div>
+      <div class="profile-sub" id="sidebar-sub">—</div>
+      <div class="profile-tags" id="sidebar-tags"></div>
+      <div class="profile-match-row"><span>Completeness</span><span class="profile-match-num" id="sidebar-completeness">—</span></div>
+      <div class="mini-bar"><div class="mini-fill" id="sidebar-mini-fill" style="width:0%"></div></div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- API Error Bar -->
+    <div class="api-error-bar" id="api-error-bar">
+      <span class="aeb-icon">⚡</span>
+      <span class="aeb-text" id="api-error-msg">Live data unavailable — showing cached results.</span>
+      <button class="aeb-retry" onclick="manualRefresh()">↺ Retry</button>
+      <button class="aeb-close" onclick="document.getElementById('api-error-bar').classList.remove('show')">✕</button>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="alert-banner">
+      <span style="font-size:16px">⏰</span>
+      <span style="font-size:13px;color:var(--muted2)" id="alert-text"></span>
+      <button class="alert-close" onclick="document.getElementById('alert-banner').classList.remove('show')">✕</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card s1"><span class="stat-icon">◈</span><div class="stat-num" style="color:var(--accent)" id="stat-total">—</div><div class="stat-label">Total opportunities</div><div class="stat-delta" style="color:var(--accent2)" id="stat-new-today">Loading…</div></div>
+      <div class="stat-card s2"><span class="stat-icon">🏆</span><div class="stat-num" style="color:var(--accent3)" id="stat-prize">—</div><div class="stat-label">Total prize pool</div><div class="stat-delta" style="color:var(--muted2)" id="stat-prize-sub">—</div></div>
+      <div class="stat-card s3"><span class="stat-icon">✦</span><div class="stat-num" style="color:var(--accent2)" id="stat-match">—</div><div class="stat-label">Avg profile match</div><div class="stat-delta" style="color:var(--muted2)">Based on your skills</div></div>
+      <div class="stat-card s4"><span class="stat-icon">⏱</span><div class="stat-num" style="color:var(--coral)" id="stat-urgent">—</div><div class="stat-label">Expiring within 48h</div><div class="stat-delta" style="color:var(--coral)" id="stat-urgent-sub">—</div></div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="cal-section">
+      <div class="cal-header">
+        <div class="cal-title" id="cal-title">Deadline Calendar</div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
+          <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+        </div>
+      </div>
+      <div class="calendar-strip" id="calendar-strip"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('new',this)">New today</button>
+      <button class="filter-btn" onclick="setFilter('prize',this)">Has prize</button>
+      <button class="filter-btn" onclick="setFilter('remote',this)">Remote only</button>
+      <button class="filter-btn" onclick="setFilter('urgent',this)">Closing soon</button>
+      <button class="filter-btn" onclick="setFilter('skill_match',this)">Skill match ≥80%</button>
+      <button class="filter-btn" onclick="setFilter('saved',this)">Saved</button>
+      <span class="filter-sep"></span>
+      <select class="sort-select" id="sort-select" onchange="renderFeed()">
+        <option value="match">Best match</option>
+        <option value="deadline">Deadline</option>
+        <option value="prize">Prize</option>
+        <option value="newest">Newest</option>
+      </select>
+    </div>
+
+    <!-- Feed Header -->
+    <div class="section-header">
+      <div class="section-title">Your Feed</div>
+      <div class="section-count" id="feed-count">Loading…</div>
+      <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
+        <svg id="refresh-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed" id="feed">
+      <div class="skeleton-card"><div class="skel skel-icon"></div><div><div class="skel skel-title"></div><div class="skel skel-sub"></div><div class="skel skel-desc"></div><div class="skel skel-desc2"></div></div></div>
+      <div class="skeleton-card"><div class="skel skel-icon"></div><div><div class="skel skel-title"></div><div class="skel skel-sub"></div><div class="skel skel-desc"></div><div class="skel skel-desc2"></div></div></div>
+      <div class="skeleton-card"><div class="skel skel-icon"></div><div><div class="skel skel-title"></div><div class="skel skel-sub"></div><div class="skel skel-desc"></div><div class="skel skel-desc2"></div></div></div>
+    </div>
+  </main>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profile-modal" onclick="if(event.target===this)closeProfileModal()">
+  <div class="modal">
+    <div class="modal-title">Edit Profile</div>
+    <button class="modal-close" onclick="closeProfileModal()">✕</button>
+    <div class="form-row" style="margin-bottom:14px">
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="field-first" type="text" placeholder="First name"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="field-last" type="text" placeholder="Last name"></div>
+    </div>
+    <div class="form-row" style="margin-bottom:14px">
+      <div class="form-group"><label class="form-label">Year</label><input class="form-input" id="field-year" type="text" placeholder="e.g. 3rd Year"></div>
+      <div class="form-group"><label class="form-label">Degree / Field</label><input class="form-input" id="field-degree" type="text" placeholder="e.g. B.Tech / BFA"></div>
+    </div>
+    <div class="form-group"><label class="form-label">College / University</label><input class="form-input" id="field-college" type="text"></div>
+    <div class="form-group"><label class="form-label">Profile Completeness (%)</label><input class="form-input" id="field-completeness" type="number" min="0" max="100"></div>
+    <div class="form-group">
+      <label class="form-label">Skills (Enter or comma to add)</label>
+      <div class="skills-wrap" id="skills-wrap" onclick="document.getElementById('skill-input').focus()">
+        <input class="skill-add-input" id="skill-input" placeholder="Add skill…" onkeydown="handleSkillKey(event)" oninput="handleSkillInput(event)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
+      <button class="btn-save" onclick="saveProfile()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   GLOBAL ERROR SYSTEM
+════════════════════════════════════════════════════ */
+const ErrorCodes = {
+  AUTH_INVALID_EMAIL:   'ERR_AUTH_001',
+  AUTH_WRONG_PASSWORD:  'ERR_AUTH_002',
+  AUTH_USER_NOT_FOUND:  'ERR_AUTH_003',
+  AUTH_EMAIL_TAKEN:     'ERR_AUTH_004',
+  AUTH_WEAK_PASSWORD:   'ERR_AUTH_005',
+  AUTH_MISSING_NAME:    'ERR_AUTH_006',
+  DB_CONNECTION:        'ERR_DB_001',
+  DB_WRITE:             'ERR_DB_002',
+  DB_READ:              'ERR_DB_003',
+  FETCH_TIMEOUT:        'ERR_NET_001',
+  FETCH_SERVER:         'ERR_NET_002',
+  FETCH_PARSE:          'ERR_NET_003',
+  VALIDATE_URL:         'ERR_VAL_001',
+  VALIDATE_IMAGE_SIZE:  'ERR_VAL_002',
+  VALIDATE_IMAGE_TYPE:  'ERR_VAL_003',
+  STORAGE_QUOTA:        'ERR_STO_001',
+  UNKNOWN:              'ERR_UNKNOWN',
+};
+
+// Global uncaught error handler
+window.addEventListener('error', e => {
+  console.error('[GlobalError]', e.error);
+  showErrorBoundary('ERR_RUNTIME', 'Runtime Error', e.message || 'An unexpected script error occurred.');
+});
+
+window.addEventListener('unhandledrejection', e => {
+  console.error('[UnhandledPromise]', e.reason);
+  const msg = String(e.reason?.message || e.reason || '');
+  // Suppress known benign rejections: fetch errors and AbortError (timeout)
+  const isBenign = (e.reason instanceof TypeError && msg.includes('fetch'))
+    || (e.reason?.name === 'AbortError')
+    || msg.toLowerCase().includes('abort');
+  if (!isBenign) {
+    showErrorBoundary('ERR_PROMISE', 'Async Error', msg || 'An unhandled promise rejection occurred.');
+  }
+});
+
+function showErrorBoundary(code, title, msg) {
+  const ebCode  = document.getElementById('eb-code');
+  const ebTitle = document.getElementById('eb-title');
+  const ebMsg   = document.getElementById('eb-msg');
+  const ebEl    = document.getElementById('error-boundary');
+  if (!ebEl) { console.error('[ErrorBoundary]', code, title, msg); return; }
+  if (ebCode)  ebCode.textContent  = code  || ErrorCodes.UNKNOWN;
+  if (ebTitle) ebTitle.textContent = title || 'Something went wrong';
+  if (ebMsg)   ebMsg.textContent   = msg   || 'An unexpected error occurred.';
+  ebEl.classList.add('show');
+}
+
+function retryAfterError() {
+  document.getElementById('error-boundary').classList.remove('show');
+  if (typeof manualRefresh === 'function') manualRefresh();
+}
+function reloadApp() { location.reload(); }
+function clearAndReload() {
+  ['op_auth_v2','op_profile_v2','op_saved_v2','op_last_sync','op_cached_data','op_users'].forEach(k => {
+    try { localStorage.removeItem(k); } catch(e) {}
+  });
+  location.reload();
+}
+
+/* ════════════════════════════════════════════════════
+   TOAST NOTIFICATION SYSTEM (stacked, auto-dismiss)
+════════════════════════════════════════════════════ */
+const TOAST_TYPES = {
+  success: '✓',
+  error:   '✕',
+  warning: '⚠',
+  info:    'ℹ',
+};
+
+function showToast(msg, type = 'success', sub = '', duration = 3000) {
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+
+  const id   = 'toast-' + Date.now() + Math.random().toString(36).slice(2,6);
+  const icon = TOAST_TYPES[type] || '✓';
+  const item = document.createElement('div');
+  item.className = `toast-item t-${type}`;
+  item.id = id;
+  item.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <div class="toast-body">
+      <div class="toast-title">${esc(msg)}</div>
+      ${sub ? `<div class="toast-sub">${esc(sub)}</div>` : ''}
+    </div>
+    <button class="toast-close" onclick="dismissToast('${id}')">✕</button>
+  `;
+
+  stack.appendChild(item);
+  requestAnimationFrame(() => { requestAnimationFrame(() => item.classList.add('in')); });
+
+  // Limit stack to 4 toasts
+  const all = stack.querySelectorAll('.toast-item');
+  if (all.length > 4) dismissToast(all[0].id);
+
+  setTimeout(() => dismissToast(id), duration);
+}
+
+function dismissToast(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('in');
+  el.classList.add('out');
+  setTimeout(() => el.remove(), 350);
+}
+
+/* Field-level error helpers */
+function setFieldError(el, msg) {
+  if (!el) return;
+  el.classList.add('field-error');
+  let errEl = el.nextElementSibling;
+  if (!errEl || !errEl.classList.contains('field-error-msg')) {
+    errEl = document.createElement('div');
+    errEl.className = 'field-error-msg';
+    el.parentNode.insertBefore(errEl, el.nextSibling);
+  }
+  errEl.innerHTML = `⚠ ${msg}`;
+  errEl.style.display = 'flex';
+}
+
+function clearFieldError(el) {
+  if (!el) return;
+  el.classList.remove('field-error');
+  const errEl = el.nextElementSibling;
+  if (errEl && errEl.classList.contains('field-error-msg')) {
+    errEl.style.display = 'none';
+  }
+}
+
+function setFieldSuccess(el) {
+  if (!el) return;
+  clearFieldError(el);
+  el.classList.add('field-success');
+  setTimeout(() => el.classList.remove('field-success'), 1500);
+}
+
+/* DB Status badge */
+function setDbStatus(state, text) {
+  const el = document.getElementById('db-status-badge');
+  const tx = document.getElementById('db-status-text');
+  if (!el || !tx) return;
+  el.className = `db-status ${state}`;
+  tx.textContent = text;
+}
+
+/* API error bar */
+function showApiError(msg) {
+  document.getElementById('api-error-msg').textContent = msg;
+  document.getElementById('api-error-bar').classList.add('show');
+}
+function hideApiError() {
+  document.getElementById('api-error-bar').classList.remove('show');
+}
+
+/* ════════════════════════════════════════════════════
+   EXPANDED SKILL CATALOGUE
+   All students worldwide, every discipline
+════════════════════════════════════════════════════ */
+const SKILL_CATEGORIES = {
+  '💻 Technology': [
+    'Python','JavaScript','TypeScript','React','Node.js','Next.js','Vue.js',
+    'Flutter','Dart','React Native','Swift','Kotlin','Java','C++','C','C#',
+    'Go','Rust','SQL','MongoDB','PostgreSQL','Firebase','Docker','Kubernetes',
+    'AWS','GCP','Azure','DevOps','CI/CD','Linux','Git','Machine Learning',
+    'Deep Learning','NLP','Computer Vision','Data Science','Pandas','NumPy',
+    'TensorFlow','PyTorch','LangChain','Prompt Engineering','Cybersecurity',
+    'Blockchain','Web3','Solidity','Embedded Systems','IoT','Arduino','FPGA',
+    'DSA','System Design','REST APIs','GraphQL','WebSockets','Figma (Dev)',
+  ],
+  '🎨 Design & Arts': [
+    'UI/UX Design','Figma','Adobe XD','Sketch','Photoshop','Illustrator',
+    'After Effects','Premiere Pro','Motion Graphics','3D Modeling','Blender',
+    'Cinema 4D','Graphic Design','Typography','Branding','Illustration',
+    'Photography','Video Editing','Animation','Game Art','Concept Art',
+    'Fashion Design','Interior Design','Architecture Drawing','Ceramics',
+    'Printmaking','Sculpture','Fine Arts','Art History',
+  ],
+  '🎭 Performing Arts': [
+    'Acting','Theatre','Dance (Classical)','Dance (Contemporary)','Dance (Hip Hop)',
+    'Bharatanatyam','Kathak','Ballet','Singing','Music Composition','Carnatic Music',
+    'Hindustani Music','Guitar','Piano','Violin','Tabla','Drums','Music Production',
+    'DJ','Stand-up Comedy','Storytelling','Mime','Puppetry','Screenwriting',
+  ],
+  '🏅 Sports & Fitness': [
+    'Cricket','Football','Basketball','Badminton','Tennis','Table Tennis','Chess',
+    'Swimming','Athletics','Volleyball','Kabaddi','Wrestling','Boxing','Archery',
+    'Shooting','Cycling','Rowing','Gymnastics','Yoga','Esports','Gaming (Competitive)',
+    'Martial Arts','Rock Climbing','Skiing','Surfing','Skateboarding',
+  ],
+  '📊 Business & Finance': [
+    'Business Development','Marketing','Digital Marketing','SEO','Content Strategy',
+    'Social Media','Copywriting','Sales','Market Research','Finance','Accounting',
+    'Financial Modelling','Valuation','Investment Banking','Venture Capital',
+    'Entrepreneurship','Startup Strategy','Product Management','Operations','Supply Chain',
+    'E-commerce','Growth Hacking','Branding','PR & Communications','HR',
+  ],
+  '🔬 Science & Research': [
+    'Biology','Biochemistry','Chemistry','Physics','Mathematics','Statistics',
+    'Bioinformatics','Genomics','Neuroscience','Ecology','Environmental Science',
+    'Climate Science','Quantum Computing','Astrophysics','Materials Science',
+    'Nanotechnology','Lab Research','Scientific Writing','Data Analysis',
+    'R Programming','MATLAB','SPSS','Survey Design','Literature Review',
+  ],
+  '🌍 Languages & Culture': [
+    'English','Hindi','French','Spanish','German','Mandarin','Arabic','Japanese',
+    'Korean','Portuguese','Russian','Tamil','Telugu','Kannada','Bengali','Swahili',
+    'Translation','Interpretation','Content Writing','Journalism','Blogging',
+    'Public Speaking','Debate','Model UN','Cross-cultural Communication',
+  ],
+  '🤝 Leadership & Soft Skills': [
+    'Leadership','Team Management','Event Management','Project Management',
+    'Community Building','Volunteering','NGO Work','Social Entrepreneurship',
+    'Negotiation','Conflict Resolution','Mentoring','Coaching','Critical Thinking',
+    'Problem Solving','Design Thinking','Agile','Scrum','Time Management',
+    'Emotional Intelligence','Networking','Fundraising','Grant Writing',
+  ],
+  '📚 Education & Teaching': [
+    'Teaching','Tutoring','Curriculum Design','EdTech','Online Course Creation',
+    'Pedagogy','Child Development','Special Education','E-learning Tools',
+    'Educational Research','Academic Writing','Scholarship Advising',
+  ],
+  '🎬 Media & Content': [
+    'Podcasting','YouTube Content Creation','Short-form Video','Reels/TikTok',
+    'Scriptwriting','Documentary Filmmaking','News Reporting','Fact-checking',
+    'Data Journalism','Book Writing','Creative Writing','Poetry','Manga/Comics',
+  ],
+};
+
+const SKILL_DOMAIN_MAP = {}; // skill → category key
+Object.entries(SKILL_CATEGORIES).forEach(([cat, skills]) => {
+  skills.forEach(s => SKILL_DOMAIN_MAP[s.toLowerCase()] = cat);
+});
+
+/* ════════════════════════════════════════════════════
+   APP STATE
+════════════════════════════════════════════════════ */
+const AUTH_KEY   = 'op_auth_v2';
+const SAVED_KEY  = 'op_saved_v2';
+const CACHE_KEY  = 'op_cached_data';
+const USERS_KEY  = 'op_users';
+
+let OPPORTUNITIES  = [];
+let savedSet       = new Set();
+let activeCategory = 'all';
+let activeFilter   = 'all';
+let calOffset      = 0;
+let refreshTimer   = null;
+let modalSkills    = [];
+let obSkillSet     = new Set();
+let obCurrentStep  = 0;
+let obAvatarDataUrl= null;
+let obSelectedLocation = 'remote';
+let obSelectedSources  = new Set(['Unstop','Internshala','LinkedIn','AICTE Portal','Devfolio']);
+let activeCat      = 'all'; // skill category tab
+
+let profileData = {
+  first:'', last:'', year:'', degree:'', college:'', city:'',
+  completeness:30, skills:[], avatar:null, location:'remote',
+  sources:['Unstop','Internshala','LinkedIn','AICTE Portal','Devfolio'],
+  email:'', authMethod:'guest'
+};
+
+const OB_TOTAL    = 4;
+const STEP_LABELS = ['Step 1 of 4','Step 2 of 4','Step 3 of 4','Step 4 of 4'];
+const STEP_PROG   = ['25%','50%','75%','100%'];
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+(function initApp() {
+  try {
+    const sv = localStorage.getItem(SAVED_KEY);
+    if (sv) JSON.parse(sv).forEach(id => savedSet.add(id));
+  } catch(e) {}
+
+  // All DOM-dependent startup must wait for DOMContentLoaded
+  function domReady(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else {
+      fn();
+    }
+  }
+
+  domReady(() => {
+    try {
+      const stored = localStorage.getItem(AUTH_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.first) {
+          profileData = parsed;
+          const loginScreen = document.getElementById('login-screen');
+          const onboardScreen = document.getElementById('onboard-screen');
+          if (loginScreen) loginScreen.classList.add('hidden');
+          if (onboardScreen) onboardScreen.classList.add('hidden');
+          launchDashboard(true);
+          return;
+        }
+      }
+    } catch(e) {
+      safeRemove(AUTH_KEY);
+    }
+    const onboardScreen = document.getElementById('onboard-screen');
+    if (onboardScreen) onboardScreen.classList.add('hidden');
+    buildSkillCatTabs();
+  });
+})();
+
+function safeRemove(key) {
+  try { localStorage.removeItem(key); } catch(e) {}
+}
+
+/* ════════════════════════════════════════════════════
+   AUTH
+════════════════════════════════════════════════════ */
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+function switchToSignup() {
+  document.getElementById('email-login-form').classList.add('hidden');
+  document.getElementById('email-signup-form').classList.remove('hidden');
+}
+
+function switchToLogin() {
+  document.getElementById('email-signup-form').classList.add('hidden');
+  document.getElementById('email-login-form').classList.remove('hidden');
+}
+
+function loginWithLinkedIn() {
+  /*
+    PRODUCTION IMPLEMENTATION:
+    const CLIENT_ID  = 'YOUR_LINKEDIN_CLIENT_ID';
+    const REDIRECT   = encodeURIComponent('https://yourdomain.com/auth/linkedin/callback');
+    const SCOPES     = 'r_liteprofile%20r_emailaddress';
+    const STATE      = crypto.randomUUID();
+    sessionStorage.setItem('li_state', STATE);
+    window.location.href =
+      `https://www.linkedin.com/oauth/v2/authorization` +
+      `?response_type=code&client_id=${CLIENT_ID}` +
+      `&redirect_uri=${REDIRECT}&scope=${SCOPES}&state=${STATE}`;
+  */
+  showToast('LinkedIn OAuth requires backend setup.', 'info', 'Connect your OAuth app in /api/auth/linkedin');
+  profileData = {
+    first:'Student', last:'', email:'student@linkedin.com', authMethod:'linkedin',
+    linkedinConnected:true, year:'3rd Year', degree:'B.Tech CSE', college:'',
+    completeness:40, skills:['Python','React'], avatar:null, location:'remote',
+    sources:['LinkedIn','Unstop','Internshala','AICTE Portal','Devfolio'], isNewUser:true
+  };
+  document.getElementById('ob-first').value = profileData.first;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('onboard-screen').classList.remove('hidden');
+  buildSkillCatTabs();
+  syncObSkillsFromProfile();
+}
+
+function loginWithEmail() {
+  const emailEl = document.getElementById('login-email');
+  const passEl  = document.getElementById('login-password');
+  const btn     = document.getElementById('login-submit-btn');
+
+  clearFieldError(emailEl); clearFieldError(passEl);
+
+  let valid = true;
+  if (!validateEmail(emailEl.value)) {
+    setFieldError(emailEl, 'Enter a valid email address.');
+    valid = false;
+  }
+  if (!passEl.value || passEl.value.length < 1) {
+    setFieldError(passEl, 'Password is required.');
+    valid = false;
+  }
+  if (!valid) { showToast('Please fix the errors above.', 'error'); return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  // Simulate async auth (replace with fetch('/api/auth/login', ...) in production)
+  setTimeout(() => {
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+      const user     = allUsers[emailEl.value.trim().toLowerCase()];
+
+      if (!user) {
+        setFieldError(emailEl, 'No account found with this email.');
+        showToast('Account not found.', 'error', 'Try signing up first.');
+        btn.disabled = false; btn.textContent = 'Sign In →';
+        return;
+      }
+      if (user.passwordHash !== simpleHash(passEl.value)) {
+        setFieldError(passEl, 'Incorrect password.');
+        showToast('Wrong password.', 'error', 'Check your password and try again.');
+        btn.disabled = false; btn.textContent = 'Sign In →';
+        return;
+      }
+
+      setFieldSuccess(emailEl); setFieldSuccess(passEl);
+      profileData = { ...user };
+      delete profileData.passwordHash;
+      safeLocalSet(AUTH_KEY, profileData);
+      document.getElementById('login-screen').classList.add('hidden');
+      launchDashboard(true);
+      showToast(`Welcome back, ${profileData.first}!`, 'success');
+    } catch(e) {
+      showErrorBoundary(ErrorCodes.DB_READ, 'Login Error', e.message || 'An unexpected login error occurred.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sign In →';
+    }
+  }, 600);
+}
+
+function signUpWithEmail() {
+  const firstEl = document.getElementById('signup-first');
+  const emailEl = document.getElementById('signup-email');
+  const passEl  = document.getElementById('signup-password');
+  const btn     = document.getElementById('signup-submit-btn');
+
+  clearFieldError(firstEl); clearFieldError(emailEl); clearFieldError(passEl);
+
+  let valid = true;
+  if (!firstEl.value.trim()) {
+    setFieldError(firstEl, 'First name is required.'); valid = false;
+  }
+  if (!validateEmail(emailEl.value)) {
+    setFieldError(emailEl, 'Enter a valid email address.'); valid = false;
+  }
+  if (!passEl.value || passEl.value.length < 6) {
+    setFieldError(passEl, 'Password must be at least 6 characters.'); valid = false;
+  }
+  if (!valid) { showToast('Please fix the errors above.', 'error'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creating account…';
+
+  setTimeout(() => {
+    try {
+      let allUsers = {};
+      try { allUsers = JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch(e) {}
+
+      const key = emailEl.value.trim().toLowerCase();
+      if (allUsers[key]) {
+        setFieldError(emailEl, 'This email is already registered.');
+        showToast('Email already in use.', 'error', 'Try signing in instead.');
+        return;
+      }
+
+      const newUser = {
+        first: firstEl.value.trim(),
+        last:  document.getElementById('signup-last').value.trim(),
+        email: key, authMethod:'email', isNewUser:true,
+        passwordHash: simpleHash(passEl.value),
+        year:'', degree:'', college:'', city:'',
+        completeness:30, skills:[], avatar:null, location:'remote',
+        sources:['Unstop','Internshala','LinkedIn','AICTE Portal','Devfolio']
+      };
+
+      allUsers[key] = newUser;
+      safeLocalSet(USERS_KEY, allUsers);
+
+      profileData = { ...newUser };
+      delete profileData.passwordHash;
+      document.getElementById('ob-first').value = newUser.first;
+      document.getElementById('ob-last').value  = newUser.last;
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('onboard-screen').classList.remove('hidden');
+      buildSkillCatTabs();
+      showToast('Account created!', 'success', 'Let\'s set up your profile.');
+    } catch(e) {
+      if (e.name === 'QuotaExceededError') showToast('Storage full.', 'error', ErrorCodes.STORAGE_QUOTA + ' — clear browser data and retry.', 4000);
+      else showErrorBoundary(ErrorCodes.DB_WRITE, 'Signup Error', e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create Account →';
+    }
+  }, 600);
+}
+
+function continueAsGuest() {
+  profileData = {
+    first:'Guest', last:'', email:'', authMethod:'guest', isNewUser:true,
+    year:'', degree:'', college:'', city:'', completeness:20,
+    skills:[], avatar:null, location:'remote',
+    sources:['Unstop','Internshala','LinkedIn','AICTE Portal','Devfolio']
+  };
+  document.getElementById('ob-first').value = 'Guest';
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('onboard-screen').classList.remove('hidden');
+  buildSkillCatTabs();
+}
+
+function safeLocalSet(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch(e) {
+    if (e.name === 'QuotaExceededError') {
+      showToast('Storage quota exceeded.', 'warning', ErrorCodes.STORAGE_QUOTA + ' — some data may not be saved.', 4000);
+    } else {
+      console.warn('[safeLocalSet] Unexpected storage error:', e);
+    }
+  }
+}
+
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
+
+function logOut() {
+  clearInterval(refreshTimer);
+  safeRemove(AUTH_KEY);
+  location.reload();
+}
+
+/* ════════════════════════════════════════════════════
+   ONBOARDING
+════════════════════════════════════════════════════ */
+let currentCatKey = Object.keys(SKILL_CATEGORIES)[0];
+
+function buildSkillCatTabs() {
+  const tabsEl = document.getElementById('skill-cat-tabs');
+  const gridEl = document.getElementById('skill-cat-grid');
+  if (!tabsEl || !gridEl) return;
+
+  const cats = Object.keys(SKILL_CATEGORIES);
+  tabsEl.innerHTML = cats.map(c =>
+    `<button class="skill-cat-tab ${c===currentCatKey?'active':''}" onclick="switchSkillCat('${CSS.escape(c)}')">${c}</button>`
+  ).join('');
+
+  renderSkillGrid();
+}
+
+function switchSkillCat(key) {
+  // Unescape key (CSS.escape adds backslashes for emoji)
+  const realKey = Object.keys(SKILL_CATEGORIES).find(k => CSS.escape(k) === key || k === key) || key;
+  currentCatKey = realKey;
+  document.querySelectorAll('.skill-cat-tab').forEach(el => el.classList.remove('active'));
+  const tabs = document.querySelectorAll('.skill-cat-tab');
+  const idx  = Object.keys(SKILL_CATEGORIES).indexOf(realKey);
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  renderSkillGrid();
+}
+
+function renderSkillGrid() {
+  const gridEl = document.getElementById('skill-cat-grid');
+  if (!gridEl) return;
+  const skills = SKILL_CATEGORIES[currentCatKey] || [];
+  gridEl.innerHTML = skills.map(s => {
+    const added = obSkillSet.has(s);
+    return `<span class="ob-skill-chip ${added?'added':''}" onclick="obQuickSkill(this,'${CSS.escape(s)}')">${s}</span>`;
+  }).join('');
+}
+
+function syncObSkillsFromProfile() {
+  (profileData.skills||[]).forEach(s => obSkillSet.add(s));
+  renderObSkills();
+  renderSkillGrid();
+}
+
+function renderObSkills() {
+  const wrap  = document.getElementById('ob-skills-wrap');
+  const input = document.getElementById('ob-skill-input');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  obSkillSet.forEach(s => {
+    const pill = document.createElement('span');
+    pill.className = 'skill-pill';
+    pill.innerHTML = `${esc(s)}<span class="skill-remove" onclick="obRemoveSkill(this,'${CSS.escape(s)}')">✕</span>`;
+    wrap.appendChild(pill);
+  });
+  wrap.appendChild(input);
+  input.value = '';
+}
+
+function obRemoveSkill(el, escapedKey) {
+  const real = obSkillSet.has(escapedKey) ? escapedKey
+    : [...obSkillSet].find(s => CSS.escape(s) === escapedKey) || escapedKey;
+  obSkillSet.delete(real);
+  renderObSkills();
+  renderSkillGrid();
+}
+
+function obAddSkill(raw) {
+  const s = raw.trim().replace(/,/g,'');
+  if (s && !obSkillSet.has(s)) { obSkillSet.add(s); renderObSkills(); renderSkillGrid(); }
+}
+
+function handleObSkillKey(e) {
+  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); obAddSkill(e.target.value); }
+  else if (e.key === 'Backspace' && e.target.value === '' && obSkillSet.size) {
+    const last = [...obSkillSet].pop(); obSkillSet.delete(last);
+    renderObSkills(); renderSkillGrid();
+  }
+}
+
+function handleObSkillInput(e) {
+  if (e.target.value.endsWith(',')) obAddSkill(e.target.value);
+}
+
+function obQuickSkill(el, escapedKey) {
+  const real = Object.values(SKILL_CATEGORIES).flat().find(s => CSS.escape(s) === escapedKey) || escapedKey;
+  if (!obSkillSet.has(real)) { obSkillSet.add(real); renderObSkills(); renderSkillGrid(); }
+}
+
+function selectLocation(key) {
+  obSelectedLocation = key;
+  ['remote','india','us','other'].forEach(k => {
+    const el = document.getElementById(`loc-${k}`);
+    if (el) el.classList.toggle('selected', k === key);
+  });
+}
+
+function toggleSource(card, name) {
+  if (obSelectedSources.has(name)) { obSelectedSources.delete(name); card.classList.remove('selected'); }
+  else { obSelectedSources.add(name); card.classList.add('selected'); }
+  const n = obSelectedSources.size;
+  document.getElementById('source-count-hint').textContent = `${n} source${n!==1?'s':''} selected`;
+  if (n === 0) showToast('Select at least 1 source.', 'warning');
+}
+
+function obNext() {
+  if (obCurrentStep === 0) {
+    const first = (document.getElementById('ob-first')||{}).value?.trim();
+    if (!first) {
+      const el = document.getElementById('ob-first');
+      el.classList.add('field-error');
+      el.style.animation = 'shake .3s ease';
+      setTimeout(() => { el.classList.remove('field-error'); el.style.animation=''; }, 800);
+      showToast('First name is required.', 'error');
+      return;
+    }
+  }
+  if (obCurrentStep < OB_TOTAL - 1) obGoTo(obCurrentStep + 1);
+}
+
+function obBack() {
+  if (obCurrentStep > 0) {
+    document.getElementById(`step-${obCurrentStep}`).classList.remove('active');
+    document.getElementById(`dot-${obCurrentStep}`).classList.remove('active','done');
+    obCurrentStep--;
+    document.getElementById(`step-${obCurrentStep}`).classList.add('active');
+    document.getElementById(`dot-${obCurrentStep}`).classList.remove('done');
+    document.getElementById(`dot-${obCurrentStep}`).classList.add('active');
+    document.getElementById('ob-step-label').textContent = STEP_LABELS[obCurrentStep];
+    document.getElementById('ob-progress').style.width   = STEP_PROG[obCurrentStep];
+  }
+}
+
+function obGoTo(step) {
+  document.getElementById(`step-${obCurrentStep}`).classList.remove('active');
+  document.getElementById(`dot-${obCurrentStep}`).classList.remove('active');
+  document.getElementById(`dot-${obCurrentStep}`).classList.add('done');
+  obCurrentStep = step;
+  document.getElementById(`step-${obCurrentStep}`).classList.add('active');
+  document.getElementById(`dot-${obCurrentStep}`).classList.remove('done');
+  document.getElementById(`dot-${obCurrentStep}`).classList.add('active');
+  document.getElementById('ob-step-label').textContent = STEP_LABELS[obCurrentStep];
+  document.getElementById('ob-progress').style.width   = STEP_PROG[obCurrentStep];
+}
+
+function handleAvatarUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Invalid file type.', 'error', 'Only JPG, PNG, GIF are accepted.', 4000);
+    return;
+  }
+  if (file.size > 2*1024*1024) {
+    showToast('Image too large.', 'error', 'Max size is 2MB.', 4000);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    obAvatarDataUrl = ev.target.result;
+    document.getElementById('avatar-placeholder').style.display = 'none';
+    document.getElementById('avatar-initials').style.display    = 'none';
+    const img = document.getElementById('avatar-img-preview');
+    img.src = obAvatarDataUrl; img.style.display = 'block';
+    showToast('Photo uploaded!', 'success');
+  };
+  reader.onerror = () => showToast('Could not read the file.', 'error', ErrorCodes.VALIDATE_IMAGE_TYPE);
+  reader.readAsDataURL(file);
+}
+
+function updateAvatarPreview() {
+  if (obAvatarDataUrl) return;
+  const first = (document.getElementById('ob-first')||{value:''}).value.trim();
+  const last  = (document.getElementById('ob-last')||{value:''}).value.trim();
+  const initEl = document.getElementById('avatar-initials');
+  if (first || last) {
+    initEl.textContent = ((first[0]||'')+(last[0]||'')).toUpperCase();
+    initEl.style.display = 'flex';
+    document.getElementById('avatar-placeholder').style.display = 'none';
+  } else {
+    initEl.style.display = 'none';
+    document.getElementById('avatar-placeholder').style.display = 'flex';
+  }
+}
+
+function calcCompleteness() {
+  let s = 25;
+  if ((document.getElementById('ob-first')||{value:''}).value.trim()) s += 15;
+  if ((document.getElementById('ob-college')||{value:''}).value.trim()) s += 10;
+  if (obAvatarDataUrl) s += 10;
+  s += obSkillSet.size >= 5 ? 25 : obSkillSet.size >= 2 ? 15 : obSkillSet.size > 0 ? 8 : 0;
+  if ((document.getElementById('ob-city')||{value:''}).value.trim()) s += 5;
+  if (obSelectedSources.size >= 3) s += 10;
+  return Math.min(s, 100);
+}
+
+function obFinish() {
+  if (obSelectedSources.size === 0) {
+    showToast('Please select at least 1 source.', 'warning'); return;
+  }
+  const inp = document.getElementById('ob-skill-input');
+  if (inp && inp.value.trim()) obSkillSet.add(inp.value.trim());
+
+  const g = id => (document.getElementById(id)||{value:''}).value.trim();
+  profileData = {
+    ...profileData,
+    first:        g('ob-first') || 'Student',
+    last:         g('ob-last'),
+    year:         g('ob-year') || '3rd Year',
+    degree:       g('ob-degree') || 'Undergraduate',
+    college:      g('ob-college'),
+    city:         g('ob-city'),
+    completeness: calcCompleteness(),
+    skills:       obSkillSet.size ? [...obSkillSet] : [],
+    skill_domains:[...new Set([...obSkillSet].map(s => SKILL_DOMAIN_MAP[s.toLowerCase()]).filter(Boolean))],
+    avatar:       obAvatarDataUrl,
+    location:     obSelectedLocation,
+    sources:      [...obSelectedSources],
+    isNewUser:    false,
+  };
+
+  if (profileData.authMethod !== 'guest') {
+    safeLocalSet(AUTH_KEY, profileData);
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(USERS_KEY)||'{}');
+      if (profileData.email) {
+        allUsers[profileData.email] = { ...profileData, passwordHash: allUsers[profileData.email]?.passwordHash };
+        safeLocalSet(USERS_KEY, allUsers);
+      }
+    } catch(e) {}
+  }
+
+  const ob = document.getElementById('onboard-screen');
+  ob.style.transition = 'opacity .5s ease'; ob.style.opacity = '0';
+  setTimeout(() => { ob.classList.add('hidden'); launchDashboard(false); }, 500);
+}
+
+/* ════════════════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════════════════ */
+function launchDashboard(returning) {
+  document.getElementById('main-shell').classList.add('visible');
+  renderSidebar();
+  updateSourceSidebar();
+  setDbStatus('syncing', 'Connecting…');
+  fetchOpportunities().then(() => {
+    setDbStatus('connected', 'DB Live');
+    if (!returning) showToast(`Welcome, ${profileData.first}! 🚀`, 'success', 'Your personalized feed is ready.');
+    else showToast(`Welcome back, ${profileData.first}! 👋`, 'success');
+  }).catch(e => {
+    setDbStatus('disconnected', 'DB Offline');
+    showApiError('Live data unavailable — showing cached results.');
+  });
+
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => fetchOpportunities(true), 5 * 60 * 1000);
+}
+
+/* ════════════════════════════════════════════════════
+   DATA LAYER
+════════════════════════════════════════════════════ */
+async function fetchOpportunities(silent = false) {
+  if (!silent) showFeedSkeleton();
+  setLastUpdated('Fetching…');
+  setDbStatus('syncing', 'Syncing…');
+
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    /*
+      PRODUCTION:
+      const res = await fetch(`/api/opportunities?sources=${encodeURIComponent(profileData.sources.join(','))}&skills=${encodeURIComponent(profileData.skills.join(','))}`, {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+        signal: controller.signal
+      });
+      if (res.status === 401) { logOut(); return; }
+      if (res.status === 429) throw Object.assign(new Error('Rate limited'), { code: ErrorCodes.FETCH_SERVER });
+      if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { code: ErrorCodes.FETCH_SERVER });
+      const data = await res.json().catch(() => { throw Object.assign(new Error('Invalid JSON'), { code: ErrorCodes.FETCH_PARSE }); });
+      OPPORTUNITIES = data.opportunities;
+    */
+    await new Promise((r, rej) => {
+      const t = setTimeout(r, 700 + Math.random() * 400);
+      controller.signal.addEventListener('abort', () => { clearTimeout(t); rej(new Error('Timeout')); });
+    });
+
+    OPPORTUNITIES = generateLiveData();
+    hideApiError();
+    setLastUpdated(formatTimeAgo(Date.now()));
+    safeLocalSet(CACHE_KEY, OPPORTUNITIES);
+    setDbStatus('connected', 'DB Live');
+
+  } catch(err) {
+    console.error('[fetchOpportunities]', err);
+    setDbStatus('disconnected', 'DB Offline');
+
+    const cached = (() => { try { return JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); } catch(e) { return null; } })();
+    if (cached && cached.length) {
+      OPPORTUNITIES = cached;
+      showApiError(`Live data unavailable (${err.message}). Showing cached results.`);
+      showToast('Using cached data.', 'warning', 'Live feed unavailable — check your connection.', 4000);
+    } else {
+      OPPORTUNITIES = [];
+      showApiError(`Could not load opportunities: ${err.message}`);
+      showToast('Failed to load data.', 'error', err.message, 5000);
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  updateCounts();
+  updateStats();
+  renderCalendar();
+  updateAlertBanner();
+  renderFeed();
+}
+
+/* ════════════════════════════════════════════════════
+   SKILL-BASED MATCH COMPUTATION
+   Matches opportunity required_skills against user.skills
+   and awards domain bonus for non-tech skill categories
+════════════════════════════════════════════════════ */
+function computeMatch(opp) {
+  const userSkills = new Set((profileData.skills||[]).map(s => s.toLowerCase()));
+  const userDomains= new Set((profileData.skill_domains||[]).map(d => d.toLowerCase()));
+
+  const required = (opp.required_skills||[]);
+  if (!required.length) return opp.match || 50; // fallback to preset
+
+  const hits = required.filter(s => userSkills.has(s.toLowerCase())).length;
+  const base  = Math.round((hits / required.length) * 70);
+
+  // Domain bonus: if any of user's skill_domains appear in opportunity's skill_categories
+  const oppDomains = (opp.skill_categories||[]).map(d => d.toLowerCase());
+  const domainHit  = oppDomains.some(d => userDomains.has(d));
+  const domainBonus = domainHit ? 20 : 0;
+
+  return Math.min(base + domainBonus + 10, 100);
+}
+
+/* ════════════════════════════════════════════════════
+   LIVE DATA GENERATOR (replace with real API)
+════════════════════════════════════════════════════ */
+function generateLiveData() {
+  const today = new Date();
+  function fd(d) {
+    const dt = new Date(today); dt.setDate(dt.getDate() + d);
+    return { display: dt.toLocaleDateString('en-IN',{month:'short',day:'numeric',year:'numeric'}), days: d };
+  }
+
+  const raw = [
+    {
+      id:1, event_name:"Smart India Hackathon 2026",
+      source:"Unstop", source_color:"#6366f1", category:"hackathon", icon:"⚡", icon_bg:"#1a1a3a",
+      ...fd(2), reward:"₹1,00,000", reward_raw:100000, stipend:null, remote:true, new_today:false,
+      match:0, eligibility:"2nd–4th Year, all branches",
+      apply_link:"https://unstop.com/hackathons",
+      description:"48-hour national hackathon with government problem statements across 8 domains.",
+      tags:["hackathon","prize"],
+      required_skills:["Python","JavaScript","React","Machine Learning","SQL"],
+      skill_categories:["💻 Technology"],
+    },
+    {
+      id:2, event_name:"Google STEP Internship 2026",
+      source:"LinkedIn", source_color:"#0a66c2", category:"internship", icon:"💼", icon_bg:"#142030",
+      ...fd(1), reward:null, reward_raw:0, stipend:"₹1.2L/month", remote:true, new_today:false,
+      match:0, eligibility:"Pre-final year, CSE/ECE",
+      apply_link:"https://www.linkedin.com/jobs",
+      description:"Google's flagship summer internship for 2nd-year CS students. World-class mentors.",
+      tags:["internship","remote","stipend"],
+      required_skills:["Python","DSA","Java","C++","System Design"],
+      skill_categories:["💻 Technology"],
+    },
+    {
+      id:3, event_name:"Young India Fellowship 2026",
+      source:"YIF", source_color:"#f472b6", category:"event", icon:"🌟", icon_bg:"#1e0f20",
+      ...fd(18), reward:"Full Fellowship", reward_raw:200000, stipend:null, remote:false, new_today:true,
+      match:0, eligibility:"Any graduate, all disciplines",
+      apply_link:"https://yif.ashoka.edu.in",
+      description:"India's premier leadership fellowship at Ashoka University — open to ALL disciplines, not just tech.",
+      tags:["event","new"],
+      required_skills:["Leadership","Public Speaking","Critical Thinking","Problem Solving"],
+      skill_categories:["🤝 Leadership & Soft Skills"],
+    },
+    {
+      id:4, event_name:"National Film Award for Student Film",
+      source:"AICTE Portal", source_color:"#f59e0b", category:"event", icon:"🎬", icon_bg:"#1e1600",
+      ...fd(30), reward:"₹50,000", reward_raw:50000, stipend:null, remote:false, new_today:false,
+      match:0, eligibility:"Film/Media students, any year",
+      apply_link:"https://dff.nic.in",
+      description:"Submit your short film or documentary for the national student film category at India's premier awards.",
+      tags:["event","prize"],
+      required_skills:["Documentary Filmmaking","Screenwriting","Video Editing","Storytelling"],
+      skill_categories:["🎬 Media & Content","🎭 Performing Arts"],
+    },
+    {
+      id:5, event_name:"Internshala Data Science Intern",
+      source:"Internshala", source_color:"#06d6a0", category:"internship", icon:"💼", icon_bg:"#0a1e16",
+      ...fd(9), reward:null, reward_raw:0, stipend:"₹8,000/month", remote:true, new_today:true,
+      match:0, eligibility:"2nd–4th Year, CSE/Statistics",
+      apply_link:"https://internshala.com",
+      description:"6-month WFH internship at a Series-B startup. Python, Pandas, ML required.",
+      tags:["internship","remote","new","stipend"],
+      required_skills:["Python","Pandas","Machine Learning","SQL","Data Science"],
+      skill_categories:["💻 Technology","🔬 Science & Research"],
+    },
+    {
+      id:6, event_name:"Sangeet Natak Akademi Yuva Puraskar",
+      source:"AICTE Portal", source_color:"#f59e0b", category:"scholarship", icon:"🎭", icon_bg:"#1a0f1a",
+      ...fd(45), reward:"₹25,000", reward_raw:25000, stipend:null, remote:false, new_today:true,
+      match:0, eligibility:"Students 18–25, performing arts",
+      apply_link:"https://sangeetnatak.gov.in",
+      description:"Government award for outstanding young performers in classical dance, music, and theatre.",
+      tags:["scholarship","new"],
+      required_skills:["Dance (Classical)","Singing","Acting","Theatre","Bharatanatyam","Carnatic Music"],
+      skill_categories:["🎭 Performing Arts"],
+    },
+    {
+      id:7, event_name:"Microsoft Imagine Cup 2026",
+      source:"Devfolio", source_color:"#a855f7", category:"hackathon", icon:"⚡", icon_bg:"#1a0f30",
+      ...fd(14), reward:"₹2,00,000", reward_raw:200000, stipend:null, remote:true, new_today:true,
+      match:0, eligibility:"All years, global students",
+      apply_link:"https://devfolio.co",
+      description:"Global student innovation competition — AI/ML and cloud preferred. Open to all disciplines.",
+      tags:["hackathon","prize","new"],
+      required_skills:["Machine Learning","Python","Azure","React","Node.js"],
+      skill_categories:["💻 Technology"],
+    },
+    {
+      id:8, event_name:"AICTE Scholarship for SC/ST PG",
+      source:"AICTE Portal", source_color:"#f59e0b", category:"scholarship", icon:"🎓", icon_bg:"#1e1400",
+      ...fd(21), reward:"₹30,000/yr", reward_raw:30000, stipend:null, remote:false, new_today:false,
+      match:0, eligibility:"SC/ST students, PG programs",
+      apply_link:"https://www.aicte-india.org",
+      description:"Central government scholarship for meritorious SC/ST postgraduate students across all disciplines.",
+      tags:["scholarship"],
+      required_skills:[],
+      skill_categories:[],
+    },
+    {
+      id:9, event_name:"Khelo India National Sports Scholarship",
+      source:"AICTE Portal", source_color:"#f59e0b", category:"scholarship", icon:"🏅", icon_bg:"#0e1800",
+      ...fd(28), reward:"₹6,28,000/yr", reward_raw:628000, stipend:null, remote:false, new_today:false,
+      match:0, eligibility:"Student athletes 14–25, any sport",
+      apply_link:"https://kheloindia.gov.in",
+      description:"Ministry of Youth Affairs scholarship for promising student athletes in any sport. Up to 6.28L/year.",
+      tags:["scholarship","sports"],
+      required_skills:["Cricket","Football","Athletics","Basketball","Swimming","Badminton","Chess","Volleyball"],
+      skill_categories:["🏅 Sports & Fitness"],
+    },
+    {
+      id:10, event_name:"The Hindu Young World Photography Award",
+      source:"Internshala", source_color:"#06d6a0", category:"event", icon:"📷", icon_bg:"#0a1a14",
+      ...fd(35), reward:"₹50,000", reward_raw:50000, stipend:null, remote:true, new_today:false,
+      match:0, eligibility:"Students under 25",
+      apply_link:"https://www.thehindu.com",
+      description:"Annual photography competition open to students under 25. Submit your best work in any category.",
+      tags:["event","prize","remote"],
+      required_skills:["Photography","Photoshop","Storytelling"],
+      skill_categories:["🎨 Design & Arts"],
+    },
+    {
+      id:11, event_name:"Meta Intern (Frontend Engineer)",
+      source:"LinkedIn", source_color:"#0a66c2", category:"internship", icon:"💼", icon_bg:"#0a1620",
+      ...fd(11), reward:null, reward_raw:0, stipend:"₹1.5L/month", remote:false, new_today:false,
+      match:0, eligibility:"3rd/4th Year, CS/CE",
+      apply_link:"https://www.linkedin.com/jobs",
+      description:"Summer internship at Meta (Bangalore/Hyderabad). React, GraphQL, TypeScript required.",
+      tags:["internship","stipend"],
+      required_skills:["React","TypeScript","GraphQL","JavaScript","Node.js"],
+      skill_categories:["💻 Technology"],
+    },
+    {
+      id:12, event_name:"FICCI ARISE Innovation Challenge",
+      source:"Unstop", source_color:"#6366f1", category:"hackathon", icon:"💡", icon_bg:"#1a1a2a",
+      ...fd(20), reward:"₹3,00,000", reward_raw:300000, stipend:null, remote:false, new_today:true,
+      match:0, eligibility:"All disciplines, UG/PG",
+      apply_link:"https://unstop.com",
+      description:"Business innovation challenge open to ALL disciplines — STEM, Arts, Commerce, Social Sciences.",
+      tags:["hackathon","prize","new"],
+      required_skills:["Business Development","Market Research","Design Thinking","Entrepreneurship","Social Entrepreneurship"],
+      skill_categories:["📊 Business & Finance","🤝 Leadership & Soft Skills"],
+    },
+    {
+      id:13, event_name:"AWS Machine Learning Workshop",
+      source:"LinkedIn", source_color:"#0a66c2", category:"event", icon:"📡", icon_bg:"#101228",
+      ...fd(7), reward:null, reward_raw:0, stipend:null, remote:true, new_today:false,
+      match:0, eligibility:"All years, basic Python knowledge",
+      apply_link:"https://www.linkedin.com/events",
+      description:"Free 3-day intensive workshop with AWS voucher and certification prep. Beginner-friendly.",
+      tags:["event","remote"],
+      required_skills:["Python","AWS","Machine Learning"],
+      skill_categories:["💻 Technology"],
+    },
+    {
+      id:14, event_name:"Laadli Media & Advertising Award",
+      source:"Internshala", source_color:"#06d6a0", category:"event", icon:"🏆", icon_bg:"#101800",
+      ...fd(40), reward:"₹20,000", reward_raw:20000, stipend:null, remote:true, new_today:false,
+      match:0, eligibility:"Media/journalism students",
+      apply_link:"https://www.laadliindia.com",
+      description:"Award for gender-sensitive media content — journalism, advertising, social media. Remote submission.",
+      tags:["event","prize","remote"],
+      required_skills:["Journalism","Content Writing","Copywriting","Digital Marketing","Social Media"],
+      skill_categories:["🎬 Media & Content","📊 Business & Finance"],
+    },
+    {
+      id:15, event_name:"HackerEarth Sprint — March",
+      source:"HackerEarth", source_color:"#ef4444", category:"hackathon", icon:"⚡", icon_bg:"#200a0a",
+      ...fd(3), reward:"₹20,000", reward_raw:20000, stipend:null, remote:true, new_today:true,
+      match:0, eligibility:"All students",
+      apply_link:"https://www.hackerearth.com",
+      description:"Monthly competitive coding sprint. DSA & problem-solving. Top 3 win cash + badge.",
+      tags:["hackathon","prize","new","remote"],
+      required_skills:["DSA","C++","Java","Python"],
+      skill_categories:["💻 Technology"],
+    },
+    {
+      id:16, event_name:"British Council IELTS Young Scholars",
+      source:"Internshala", source_color:"#06d6a0", category:"scholarship", icon:"🎓", icon_bg:"#101616",
+      ...fd(60), reward:"Full scholarship", reward_raw:500000, stipend:null, remote:false, new_today:false,
+      match:0, eligibility:"Any student, strong English communication",
+      apply_link:"https://www.britishcouncil.in",
+      description:"Study abroad scholarship for Indian students with exceptional English communication skills.",
+      tags:["scholarship"],
+      required_skills:["English","Public Speaking","Content Writing","Cross-cultural Communication"],
+      skill_categories:["🌍 Languages & Culture"],
+    },
+    {
+      id:17, event_name:"StartupIndia Pitch Competition",
+      source:"Unstop", source_color:"#6366f1", category:"event", icon:"🚀", icon_bg:"#12121e",
+      ...fd(12), reward:"₹5,00,000", reward_raw:500000, stipend:null, remote:false, new_today:false,
+      match:0, eligibility:"All years, any degree",
+      apply_link:"https://www.startupindia.gov.in",
+      description:"Pitch your startup idea to a jury of VCs and mentors. Funding, mentorship, and incubation at stake.",
+      tags:["event","prize"],
+      required_skills:["Entrepreneurship","Business Development","Product Management","Startup Strategy","Fundraising"],
+      skill_categories:["📊 Business & Finance","🤝 Leadership & Soft Skills"],
+    },
+    {
+      id:18, event_name:"Tata Scholarship for Women in STEM",
+      source:"AICTE Portal", source_color:"#f59e0b", category:"scholarship", icon:"🎓", icon_bg:"#1a1000",
+      ...fd(15), reward:"₹50,000/yr", reward_raw:50000, stipend:null, remote:false, new_today:true,
+      match:0, eligibility:"Women, 1st–3rd Year, STEM",
+      apply_link:"https://www.aicte-india.org",
+      description:"Annual merit-based scholarship for women pursuing STEM degrees in India.",
+      tags:["scholarship","new"],
+      required_skills:[],
+      skill_categories:["💻 Technology","🔬 Science & Research"],
+    },
+  ];
+
+  // Filter by selected sources
+  const filtered = raw.filter(o =>
+    !profileData.sources?.length ||
+    profileData.sources.some(s => o.source === s || (s==='YIF'&&o.source==='YIF'))
+  );
+
+  // Compute skill-based match for each opportunity
+  return filtered.map(o => ({ ...o, match: computeMatch(o) }));
+}
+
+function setLastUpdated(t) {
+  const el = document.getElementById('last-updated-label');
+  if (el) el.textContent = `Live · ${t}`;
+}
+function formatTimeAgo(ts) {
+  const d = Math.floor((Date.now()-ts)/1000);
+  if (d<60) return `${d}s ago`;
+  if (d<3600) return `${Math.floor(d/60)}m ago`;
+  return `${Math.floor(d/3600)}h ago`;
+}
+function showFeedSkeleton() {
+  const feed = document.getElementById('feed');
+  if (!feed) return;
+  feed.innerHTML = Array(3).fill(`<div class="skeleton-card"><div class="skel skel-icon"></div><div><div class="skel skel-title"></div><div class="skel skel-sub"></div><div class="skel skel-desc"></div><div class="skel skel-desc2"></div></div></div>`).join('');
+  document.getElementById('feed-count').textContent = 'Loading…';
+}
+async function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) btn.classList.add('spinning');
+  await fetchOpportunities(false);
+  if (btn) btn.classList.remove('spinning');
+  showToast('Feed refreshed!', 'success');
+}
+
+/* ════════════════════════════════════════════════════
+   STATS
+════════════════════════════════════════════════════ */
+function updateStats() {
+  const total   = OPPORTUNITIES.length;
+  const newT    = OPPORTUNITIES.filter(o=>o.new_today).length;
+  const urgent  = OPPORTUNITIES.filter(o=>o.days<=2).length;
+  const avgM    = total ? Math.round(OPPORTUNITIES.reduce((a,o)=>a+o.match,0)/total) : 0;
+  const prize   = OPPORTUNITIES.reduce((a,o)=>a+(o.reward_raw||0),0);
+
+  document.getElementById('stat-total').textContent    = total;
+  document.getElementById('stat-new-today').textContent= `↑ ${newT} added today`;
+  document.getElementById('stat-urgent').textContent   = urgent;
+  document.getElementById('stat-match').textContent    = avgM+'%';
+  document.getElementById('notif-count').textContent   = urgent;
+  document.getElementById('stat-urgent-sub').textContent = urgent > 0 ? '⚠ Act immediately' : '✓ No urgent deadlines';
+
+  const prizeStr = prize >= 100000 ? `₹${(prize/100000).toFixed(1)}L+` : prize >= 1000 ? `₹${Math.round(prize/1000)}K+` : `₹${prize}`;
+  document.getElementById('stat-prize').textContent    = prizeStr;
+  document.getElementById('stat-prize-sub').textContent= `Across ${OPPORTUNITIES.filter(o=>o.reward_raw>0).length} opportunities`;
+}
+
+function updateCounts() {
+  document.getElementById('count-all').textContent = OPPORTUNITIES.length;
+  ['hackathon','internship','scholarship','event'].forEach(c => {
+    const el = document.getElementById(`count-${c}`);
+    if (el) el.textContent = OPPORTUNITIES.filter(o=>o.category===c).length;
+  });
+}
+
+function updateAlertBanner() {
+  const urgent = OPPORTUNITIES.filter(o=>o.days<=2);
+  const el = document.getElementById('alert-banner');
+  if (!el) return;
+  if (urgent.length) {
+    document.getElementById('alert-text').innerHTML =
+      `<strong style="color:var(--text)">${urgent.length} deadline${urgent.length>1?'s':''} in 48 hours</strong> — ${urgent.map(o=>esc(o.event_name)).join(' · ')}`;
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   CALENDAR
+════════════════════════════════════════════════════ */
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function calNav(d) { calOffset+=d; renderCalendar(); }
+
+function renderCalendar() {
+  const today = new Date();
+  const vd    = new Date(today.getFullYear(), today.getMonth()+calOffset, 1);
+  const month = vd.getMonth(), year = vd.getFullYear();
+  document.getElementById('cal-title').textContent = `Deadline Calendar · ${MONTHS[month]} ${year}`;
+
+  const daysInMonth = new Date(year,month+1,0).getDate();
+  const deadlineDays = {};
+  OPPORTUNITIES.forEach(o => {
+    const d = new Date(o.display||o.deadline||'');
+    if (!isNaN(d) && d.getMonth()===month && d.getFullYear()===year) {
+      const day = d.getDate();
+      if (!deadlineDays[day]) deadlineDays[day]=[];
+      deadlineDays[day].push(o.category);
+    }
+  });
+
+  let html='';
+  for (let d=1; d<=daysInMonth; d++) {
+    const date = new Date(year,month,d);
+    const isToday = date.toDateString()===today.toDateString();
+    const cats = deadlineDays[d]||[];
+    const dots = [...new Set(cats)].slice(0,3).map(c => {
+      const bg = c==='hackathon'?'var(--accent)':c==='internship'?'var(--accent2)':c==='scholarship'?'var(--accent3)':'var(--purple)';
+      return `<div class="cal-dot" style="background:${bg}"></div>`;
+    }).join('');
+    html += `<div class="cal-day ${isToday?'today':''} ${cats.length?'has-event':''}">
+      <div class="cal-day-name">${DAYS[date.getDay()]}</div>
+      <div class="cal-day-num">${d}</div>
+      <div class="cal-dots">${dots}</div>
+    </div>`;
+  }
+  const strip = document.getElementById('calendar-strip');
+  strip.innerHTML = html;
+  if (calOffset===0) {
+    const te = strip.querySelector('.today');
+    if (te) setTimeout(()=>te.scrollIntoView({inline:'center',behavior:'smooth'}),100);
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   FILTER / SEARCH / SORT
+════════════════════════════════════════════════════ */
+function setCategory(cat, el) {
+  activeCategory = cat;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  renderFeed();
+}
+
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderFeed();
+}
+
+function getFiltered() {
+  const q    = (document.getElementById('search-input')||{value:''}).value.toLowerCase().trim();
+  const sort = (document.getElementById('sort-select')||{value:'match'}).value;
+
+  let data = OPPORTUNITIES.filter(o => {
+    if (activeCategory!=='all' && o.category!==activeCategory) return false;
+    if (activeFilter==='new'        && !o.new_today)         return false;
+    if (activeFilter==='prize'      && !o.reward)            return false;
+    if (activeFilter==='remote'     && !o.remote)            return false;
+    if (activeFilter==='urgent'     && o.days>5)             return false;
+    if (activeFilter==='skill_match'&& o.match<80)           return false;
+    if (activeFilter==='saved'      && !savedSet.has(o.id))  return false;
+    if (q) {
+      const hay = [
+        o.event_name, o.source, o.description, o.eligibility,
+        ...(o.tags||[]), ...(o.required_skills||[]), ...(o.skill_categories||[])
+      ].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (sort==='deadline') data.sort((a,b)=>a.days-b.days);
+  else if (sort==='match') data.sort((a,b)=>b.match-a.match);
+  else if (sort==='prize') data.sort((a,b)=>b.reward_raw-a.reward_raw);
+  else if (sort==='newest') data.sort((a,b)=>(b.new_today?1:0)-(a.new_today?1:0));
+  return data;
+}
+
+/* ════════════════════════════════════════════════════
+   RENDER FEED
+════════════════════════════════════════════════════ */
+const TAG_META = {
+  hackathon:  { cls:'tag-hack',    label:'Hackathon'  },
+  internship: { cls:'tag-intern',  label:'Internship' },
+  scholarship:{ cls:'tag-scholar', label:'Scholarship'},
+  event:      { cls:'tag-event',   label:'Workshop'   },
+  prize:      { cls:'tag-prize',   label:'Cash Prize' },
+  new:        { cls:'tag-new',     label:'New Today'  },
+  remote:     { cls:'tag-remote',  label:'Remote'     },
+  stipend:    { cls:'tag-stipend', label:'Paid'       },
+  sports:     { cls:'tag-sports',  label:'Sports'     },
+  arts:       { cls:'tag-arts',    label:'Arts'       },
+  leadership: { cls:'tag-leadership',label:'Leadership'},
+  research:   { cls:'tag-research',label:'Research'   },
+};
+
+function buildTags(tags) {
+  return (tags||[]).map(t=>{
+    const m = TAG_META[t]||{cls:'tag-remote',label:t};
+    return `<span class="tag ${m.cls}">${m.label}</span>`;
+  }).join('');
+}
+
+function renderFeed() {
+  const data = getFiltered();
+  const feed = document.getElementById('feed');
+  if (!feed) return;
+  document.getElementById('feed-count').textContent = `Showing ${data.length} result${data.length!==1?'s':''}`;
+
+  if (!data.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No opportunities found</div><div class="empty-sub">Try adjusting your filters, search, or skills</div></div>`;
+    return;
+  }
+
+  feed.innerHTML = data.map(o => {
+    const urgency = o.days<=2?'urgent':o.days<=7?'soon':'ok';
+    const isSaved = savedSet.has(o.id);
+    const rewardBadge = o.reward
+      ? `<span class="tag tag-prize">${esc(o.reward)}</span>`
+      : o.stipend ? `<span class="tag tag-stipend">${esc(o.stipend)}</span>` : '';
+
+    // Highlight matched skills
+    const userSkills = new Set((profileData.skills||[]).map(s=>s.toLowerCase()));
+    const skillHints = (o.required_skills||[]).slice(0,3).map(s =>
+      `<span style="font-size:10px;padding:1px 7px;border-radius:20px;border:1px solid ${userSkills.has(s.toLowerCase())?'rgba(6,214,160,.3)':'var(--border)'};color:${userSkills.has(s.toLowerCase())?'var(--accent2)':'var(--muted)'};">${esc(s)}</span>`
+    ).join('');
+
+    return `<div class="opp-card ${o.days<=2?'urgent-card':''}" title="${esc(o.event_name)}">
+      <div class="opp-icon" style="background:${o.icon_bg}">${o.icon}</div>
+      <div class="opp-meta">
+        <div class="opp-title">${esc(o.event_name)}</div>
+        <div class="opp-source"><span class="source-dot" style="background:${o.source_color}"></span>${esc(o.source)} · ${esc(o.eligibility)}</div>
+        <div class="opp-desc">${esc(o.description)}</div>
+        <div class="opp-tags">${buildTags(o.tags)}${rewardBadge}</div>
+        ${skillHints ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${skillHints}</div>` : ''}
+        <div class="match-row">
+          <div class="match-bar"><div class="match-fill" style="width:${o.match}%"></div></div>
+          <div class="match-label">${o.match}% skill match</div>
+        </div>
+      </div>
+      <div class="opp-right">
+        <div class="deadline-badge">
+          <div class="days-num ${urgency}">${o.days}</div>
+          <div class="days-label">days left</div>
+          <div class="deadline-date">${esc(o.display||'')}</div>
+        </div>
+        <button class="apply-btn" onclick="event.stopPropagation();openApply(${o.id})">Apply →</button>
+      </div>
+      <button class="save-btn ${isSaved?'saved':''}" onclick="event.stopPropagation();toggleSave(${o.id},this)" title="${isSaved?'Unsave':'Save'}">${isSaved?'★':'☆'}</button>
+    </div>`;
+  }).join('');
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openApply(id) {
+  const o = OPPORTUNITIES.find(x=>x.id===id);
+  if (!o || !o.apply_link) { showToast('No application link available.', 'warning'); return; }
+  try {
+    const url = new URL(o.apply_link);
+    if (!['http:','https:'].includes(url.protocol)) throw new Error('Unsafe URL protocol');
+    window.open(o.apply_link,'_blank','noopener,noreferrer');
+  } catch(e) {
+    showToast('Invalid link.', 'error', `${ErrorCodes.VALIDATE_URL}: ${e.message}`);
+  }
+}
+
+/* SAVE */
+function toggleSave(id, btn) {
+  if (savedSet.has(id)) {
+    savedSet.delete(id); btn.textContent='☆'; btn.classList.remove('saved');
+    showToast('Removed from saved.', 'info');
+  } else {
+    savedSet.add(id); btn.textContent='★'; btn.classList.add('saved');
+    showToast('Saved to your list!', 'success');
+  }
+  safeLocalSet(SAVED_KEY, [...savedSet]);
+}
+
+/* ════════════════════════════════════════════════════
+   PROFILE MODAL
+════════════════════════════════════════════════════ */
+function getInitials(f,l) { return ((f[0]||'')+(l[0]||'')).toUpperCase()||'?'; }
+
+function toggleProfileDropdown() { document.getElementById('profile-dropdown').classList.toggle('open'); }
+function closeProfileDropdown() { document.getElementById('profile-dropdown').classList.remove('open'); }
+document.addEventListener('click', e => {
+  const w = document.querySelector('.profile-dropdown-wrap');
+  if (w && !w.contains(e.target)) closeProfileDropdown();
+});
+
+function renderSidebar() {
+  const p  = profileData;
+  const ini = getInitials(p.first||'S', p.last||'');
+  const topBtn = document.getElementById('topbar-profile-btn');
+  if (topBtn) {
+    if (p.avatar) topBtn.innerHTML = `<img src="${p.avatar}" style="width:34px;height:34px;border-radius:50%;object-fit:cover" alt="">`;
+    else topBtn.textContent = ini;
+  }
+  const sa = document.getElementById('sidebar-avatar');
+  if (sa) { sa.textContent = ini; }
+  const name = `${p.first||''} ${p.last||''}`.trim()||'Student';
+  const snEl = document.getElementById('sidebar-name'); if (snEl) snEl.textContent = name;
+  const subEl = document.getElementById('sidebar-sub'); if (subEl) subEl.textContent = [p.year,p.degree,p.college].filter(Boolean).join(' · ')||'—';
+  const compEl = document.getElementById('sidebar-completeness'); if (compEl) compEl.textContent = `${p.completeness||0}%`;
+  const fillEl = document.getElementById('sidebar-mini-fill'); if (fillEl) fillEl.style.width = `${p.completeness||0}%`;
+  const tagsEl = document.getElementById('sidebar-tags'); if (tagsEl) tagsEl.innerHTML = (p.skills||[]).slice(0,5).map(s=>`<span class="ptag">${esc(s)}</span>`).join('');
+  const pdN = document.getElementById('pd-name'); if (pdN) pdN.textContent = name;
+  const pdE = document.getElementById('pd-email'); if (pdE) pdE.textContent = p.email||(p.authMethod==='linkedin'?'LinkedIn account':'Guest session');
+}
+
+function updateSourceSidebar() {
+  const SCOL = {'Unstop':'#6366f1','Internshala':'#06d6a0','LinkedIn':'#0a66c2','AICTE Portal':'#f59e0b','Devfolio':'#a855f7','HackerEarth':'#ef4444','YIF':'#f472b6','NSP':'#38bdf8'};
+  const sec = document.getElementById('sources-section');
+  if (!sec) return;
+  let html = '<span class="sidebar-label">Sources</span>';
+  (profileData.sources||[]).forEach(n=>{
+    html+=`<div class="nav-item"><span class="nav-dot" style="background:${SCOL[n]||'#7a8199'}"></span>${esc(n)}</div>`;
+  });
+  sec.innerHTML = html;
+}
+
+function openProfileModal() {
+  const p = profileData;
+  document.getElementById('field-first').value = p.first||'';
+  document.getElementById('field-last').value  = p.last||'';
+  document.getElementById('field-year').value  = p.year||'';
+  document.getElementById('field-degree').value= p.degree||'';
+  document.getElementById('field-college').value=p.college||'';
+  document.getElementById('field-completeness').value=p.completeness||30;
+  modalSkills = [...(p.skills||[])];
+  renderModalSkills();
+  document.getElementById('profile-modal').classList.add('open');
+}
+function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); }
+
+function renderModalSkills() {
+  const wrap = document.getElementById('skills-wrap');
+  const input= document.getElementById('skill-input');
+  if (!wrap||!input) return;
+  wrap.innerHTML = '';
+  modalSkills.forEach((s,i)=>{
+    const p2 = document.createElement('span');
+    p2.className = 'skill-pill';
+    p2.innerHTML = `${esc(s)}<span class="skill-remove" onclick="removeSkill(${i})">✕</span>`;
+    wrap.appendChild(p2);
+  });
+  wrap.appendChild(input); input.value='';
+}
+function removeSkill(i) { modalSkills.splice(i,1); renderModalSkills(); }
+function handleSkillKey(e) {
+  if (e.key==='Enter'||e.key===',') { e.preventDefault(); addSkillFromInput(); }
+  else if (e.key==='Backspace'&&e.target.value===''&&modalSkills.length) { modalSkills.pop(); renderModalSkills(); }
+}
+function handleSkillInput(e) { if (e.target.value.endsWith(',')) addSkillFromInput(); }
+function addSkillFromInput() {
+  const inp = document.getElementById('skill-input');
+  const val = inp.value.replace(/,/g,'').trim();
+  if (val&&!modalSkills.includes(val)) { modalSkills.push(val); renderModalSkills(); }
+  else inp.value='';
+}
+
+function saveProfile() {
+  const pending = document.getElementById('skill-input').value.replace(/,/g,'').trim();
+  if (pending&&!modalSkills.includes(pending)) modalSkills.push(pending);
+
+  const comp = Math.min(100,Math.max(0,parseInt(document.getElementById('field-completeness').value)||30));
+  const newSkills = modalSkills.length ? [...modalSkills] : profileData.skills;
+
+  profileData = {
+    ...profileData,
+    first:        document.getElementById('field-first').value.trim()  || profileData.first,
+    last:         document.getElementById('field-last').value.trim()   || profileData.last,
+    year:         document.getElementById('field-year').value.trim()   || profileData.year,
+    degree:       document.getElementById('field-degree').value.trim() || profileData.degree,
+    college:      document.getElementById('field-college').value.trim()|| profileData.college,
+    completeness: comp,
+    skills:       newSkills,
+    skill_domains:[...new Set(newSkills.map(s=>SKILL_DOMAIN_MAP[s.toLowerCase()]).filter(Boolean))],
+  };
+
+  renderSidebar();
+  closeProfileModal();
+
+  if (profileData.authMethod !== 'guest') {
+    safeLocalSet(AUTH_KEY, profileData);
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(USERS_KEY)||'{}');
+      if (profileData.email) {
+        allUsers[profileData.email] = { ...profileData, passwordHash: allUsers[profileData.email]?.passwordHash };
+        safeLocalSet(USERS_KEY, allUsers);
+      }
+    } catch(e) {}
+  }
+
+  // Re-compute matches with updated skills
+  OPPORTUNITIES = OPPORTUNITIES.map(o => ({ ...o, match: computeMatch(o) }));
+  updateStats();
+  renderFeed();
+  showToast('Profile updated!', 'success', 'Match scores recalculated.');
+}
+
+/* ════════════════════════════════════════════════════
+   DOM READY
+════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  const f = document.getElementById('field-first');
+  const l = document.getElementById('field-last');
+  if (f) f.addEventListener('input', () => {});
+  if (l) l.addEventListener('input', () => {});
+
+  // Enter key on login
+  document.getElementById('login-password')?.addEventListener('keydown', e => {
+    if (e.key==='Enter') loginWithEmail();
+  });
+  document.getElementById('signup-password')?.addEventListener('keydown', e => {
+    if (e.key==='Enter') signUpWithEmail();
+  });
+});
+</script>
+</body>
+</html>
